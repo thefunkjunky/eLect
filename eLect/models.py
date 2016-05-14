@@ -17,7 +17,7 @@ class User(Base):
     password = Column(String(10084))
     
     # Foreign relationships
-    registered_elections = relationship("Election", backref="user")
+    # registered_elections = relationship("Election", backref="user")
     administered_elections = relationship("Election", backref="admin")
     votes = relationship("Vote", backref="user")
     # groups = relationship("Group", backref="user")
@@ -52,7 +52,22 @@ class Election(Base):
     # Foreign relationships
     default_race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
     races = relationship("Race", backref="election")
-    administrators = relationship("User", backref="election")
+    # TODO: Open this up to have ability to have multiple admins (many-to-many?)
+    administrator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+    def as_dictionary(self):
+        election = {
+        "id": self.id,
+        "title": self.title,
+        "description_short": self.description_short,
+        "description_long": self.description_long,
+        "start_date": self.start_date,
+        "end_date": self.end_date,
+        "elect_open": self.elect_open,
+        "default_race_type": self.default_race_type,
+        "administrator_id": self.administrator_id,
+        }
+        return election
 
 
 class Race(Base):
@@ -68,6 +83,18 @@ class Race(Base):
     race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
     candidates = relationship("Candidate", backref="race")
 
+    def as_dictionary(self):
+        race = {
+        "id": self.id,
+        "title": self.title,
+        "description_short": self.description_short,
+        "description_long": self.description_long,
+        "election_id": self.election_id,
+        "race_type": self.race_type,
+        }
+        return race
+
+
 class Candidate(Base):
     """ Candidate class scheme """
     __tablename__ = "candidate"
@@ -80,6 +107,17 @@ class Candidate(Base):
     race_id = Column(Integer, ForeignKey('race.id'), nullable=False)
     votes = relationship("Vote", backref="candidate")
 
+    def as_dictionary(self):
+        candidate = {
+        "id": self.id,
+        "title": self.title,
+        "description_short": self.description_short,
+        "description_long": self.description_long,
+        "race_id": self.race_id,
+        }
+        return candidate
+
+
 class Vote(Base):
     """ Vote class scheme """
     __tablename__ = "vote"
@@ -90,6 +128,15 @@ class Vote(Base):
     candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
+    def as_dictionary(self):
+        vote = {
+        "id": self.id,
+        "value": self.value,
+        "candidate_id": self.candidate_id,
+        "user_id": self.user_id,
+        }
+        return vote
+
 class RaceType(Base):
     """ RaceType class scheme """
     __tablename__ = "race_type"
@@ -97,8 +144,19 @@ class RaceType(Base):
     title = Column(String(128), nullable=False)
     description_short = Column(String(1000))
     description_long = Column(String(60000))
-    
+
     # Foreign relationships
+    # elections = relationship("Election", backref="default_type")
+    # races = relationship("Race", backref="race_type")
+
+    def as_dictionary(self):
+        race_type = {
+        "id": self.id,
+        "title": self.title,
+        "description_short": self.description_short,
+        "description_long": self.description_long,
+        }
+        return race_type
 
 
 
@@ -121,4 +179,3 @@ class RaceType(Base):
 #         }
 #         return file
 
-Base.metadata.create_all(engine)
