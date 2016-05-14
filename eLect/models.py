@@ -45,13 +45,15 @@ class Election(Base):
     title = Column(String(128), nullable=False)
     description_short = Column(String(1000))
     description_long = Column(String(60000))
-    elect_open = Column(Boolean(), nullable=False) #look into types.Boolean() create_constraint
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime)
+    elect_open = Column(Boolean, nullable=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
-    default_race_type = Column(Integer, ForeignKey('type.id'), nullable=False)
+    default_race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
     races = relationship("Race", backref="election")
     administrators = relationship("User", backref="election")
-    # election_id = Column(Integer, ForeignKey('election.id'))
+
 
 class Race(Base):
     """ Race class scheme """
@@ -63,7 +65,7 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    race_type = Column(Integer, ForeignKey('type.id'), nullable=False)
+    race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
     candidates = relationship("Candidate", backref="race")
 
 class Candidate(Base):
@@ -87,6 +89,20 @@ class Vote(Base):
     # Foreign relationships
     candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+class RaceType(Base):
+    """ RaceType class scheme """
+    __tablename__ = "race_type"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(128), nullable=False)
+    description_short = Column(String(1000))
+    description_long = Column(String(60000))
+    
+    # Foreign relationships
+
+
+
+
 
 
 
