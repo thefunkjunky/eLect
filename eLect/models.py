@@ -50,7 +50,7 @@ class Election(Base):
     elect_open = Column(Boolean, nullable=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
-    default_race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
+    default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
     races = relationship("Race", backref="election")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     administrator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -64,7 +64,7 @@ class Election(Base):
         "start_date": self.start_date,
         "end_date": self.end_date,
         "elect_open": self.elect_open,
-        "default_race_type": self.default_race_type,
+        "default_elect_type": self.default_elect_type,
         "administrator_id": self.administrator_id,
         }
         return election
@@ -80,7 +80,7 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    race_type = Column(Integer, ForeignKey('race_type.id'), nullable=False)
+    elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
     candidates = relationship("Candidate", backref="race")
 
     def as_dictionary(self):
@@ -90,7 +90,7 @@ class Race(Base):
         "description_short": self.description_short,
         "description_long": self.description_long,
         "election_id": self.election_id,
-        "race_type": self.race_type,
+        "elect_type": self.elect_type,
         }
         return race
 
@@ -137,9 +137,9 @@ class Vote(Base):
         }
         return vote
 
-class RaceType(Base):
-    """ RaceType class scheme """
-    __tablename__ = "race_type"
+class ElectionType(Base):
+    """ Election Type class scheme """
+    __tablename__ = "elect_type"
     id = Column(Integer, primary_key=True)
     title = Column(String(128), nullable=False)
     description_short = Column(String(1000))
@@ -147,16 +147,16 @@ class RaceType(Base):
 
     # Foreign relationships
     # elections = relationship("Election", backref="default_type")
-    # races = relationship("Race", backref="race_type")
+    # races = relationship("Race", backref="elect_type")
 
     def as_dictionary(self):
-        race_type = {
+        elect_type = {
         "id": self.id,
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
         }
-        return race_type
+        return elect_type
 
 
 

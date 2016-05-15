@@ -36,7 +36,6 @@ def check_cand_id(cand_id):
         return Response(data, 404, mimetype="application/json")
 
 
-
 # Define the API routes
 @app.route("/api/elections", methods=["GET"])
 @decorators.accept("application/json")
@@ -216,7 +215,7 @@ def vote_get(elect_id, race_id, cand_id, vote_id):
     methods=["GET"])
 @decorators.accept("application/json")
 def user_get(user_id):
-    """ Returns information for a specific user """
+    """ Returns information about a specific user """
     user = session.query(models.User).get(user_id)
 
     if not user:
@@ -225,4 +224,34 @@ def user_get(user_id):
         return Response(data, 404, mimetype="application/json")
 
     data = json.dumps(user.as_dictionary())
+    return Response(data, 200, mimetype="application/json")
+
+
+@app.route("/api/types", methods=["GET"])
+@decorators.accept("application/json")
+def types_get():
+    """ Returns a list of election types """
+    elect_types = session.query(models.ElectionType)
+    elect_types = elect_types.order_by(models.ElectionType.id)
+
+    if not elect_types:
+        message = "No election types in database."
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
+    data = json.dumps([elect_type.as_dictionary() for elect_type in elect_types])
+    return Response(data, 200, mimetype="application/json")
+
+@app.route("/api/types/<int:types_id>", methods=["GET"])
+@decorators.accept("application/json")
+def type_get(type_id):
+    """ Returns information about an election type """
+    elect_type = session.query(models.ElectionType).get(type_id)
+
+    if not elect_type:
+        message = "No election type with id #{}.".format(type_id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
+    data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
