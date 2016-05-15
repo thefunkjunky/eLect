@@ -1,4 +1,5 @@
 import os.path
+from datetime import datetime
 import json
 
 from flask import request, Response, url_for, send_from_directory
@@ -36,7 +37,7 @@ def check_cand_id(cand_id):
         return Response(data, 404, mimetype="application/json")
 
 
-# Define the API routes
+### Define the API endpoints
 @app.route("/api/elections", methods=["GET"])
 @decorators.accept("application/json")
 def elections_get():
@@ -67,25 +68,24 @@ def election_get(id):
     data = json.dumps(election.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
-##########
-# NOTE:
-# Should I also have typical routes for viewing ALL races, 
-# candidates, etc?  Mem overload?  Doesn't matter?
-##########
 
 @app.route("/api/elections/<int:elect_id>/races", methods=["GET"])
+@app.route("/api/races", methods=["GET"])
 @decorators.accept("application/json")
-def races_get(elect_id):
-    """ Returns a list of races from a given election with elect_id """
+def races_get(elect_id = None):
+    """ Returns a list of races, with option to limit query to a specific election """
 
-    # Check for election's existence
-    check_election_id(elect_id)
+    # Check for election's existence, if elect_id given
+    if elect_id:
+        check_election_id(elect_id)
+        # Finds races for election with elect_id
+        # QUESTION
+        # what is the difference between .filter(SQL expressions),
+        # and .filter_by(keyword expressions)?
+        races = session.query(models.Race).filter(Race.election_id == elect_id)
+    else:
+        races = session.query(models.Race)
 
-    # Finds races for election with elect_id
-    races = session.query(models.Race).filter(Race.election_id == elect_id) 
-    # QUESTION
-    # what is the difference between .filter(SQL expressions),
-    # and .filter_by(keyword expressions)?
     races = races.order_by(models.Race.id)
 
     if not races:
@@ -97,11 +97,13 @@ def races_get(elect_id):
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>", methods=["GET"])
+@app.route("/api/races/<int:race_id>", methods=["GET"])
 @decorators.accept("application/json")
-def race_get(elect_id, race_id):
-    """ Returns a single race from a given election """
-    # Check for election's existence
-    check_election_id(elect_id)
+def race_get(race_id, elect_id=None):
+    """ Returns information for a single race """
+    # Check for election's existence, if elect_id is included
+    if elect_id:
+        check_election_id(elect_id)
 
     # Finds race with race_id
     race = session.query(models.Race).get(race_id)
@@ -117,18 +119,22 @@ def race_get(elect_id, race_id):
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates",
  methods=["GET"])
+@app.route("/api/candidates", methods=["GET"])
 @decorators.accept("application/json")
-def candidates_get(elect_id, race_id):
-    """ Returns a list of candidates for a specific election/race """
-    # Check for election's existence
-    check_election_id(elect_id)
+def candidates_get(elect_id=None, race_id=None):
+    """ Returns a list of candidates """
+    if elect_id and race_id:
+        # Check for election's existence
+        check_election_id(elect_id)
+        # Check for race's existence
+        check_race_id(race_id)
+        # Find candidates for given election / race
+        candidates = session.query(models.Candidate).filter(models.Race.id == race_id)
+    else:
+        candidates = session.query(models.Candidate)
 
-    # Check for race's existence
-    check_race_id(race_id)
-
-    # Find and check the candidates
-    candidates = session.query(models.Candidate).filter(models.Race.id == race_id)
     candidates = candidates.order_by(models.Candidate.id)
+
     if not candidates:
         message = "No candidates found for race id #{}.".format(race_id)
         data = json.dumps({"message": message})
@@ -138,14 +144,16 @@ def candidates_get(elect_id, race_id):
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>", methods=["GET"])
+@app.route("/api/candidates/<int:cand_id>", methods=["GET"])
 @decorators.accept("application/json")
-def candidate_get(elect_id, race_id, cand_id):
-    """ Returns a single candidate from a specific election/race"""
-    # Check for election's existence
-    check_election_id(elect_id)
+def candidate_get(cand_id, elect_id=None, race_id=None):
+    """ Returns information for a single candidate """
+    if elect_id and race_id:
+        # Check for election's existence
+        check_election_id(elect_id)
 
-    # Check for race's existence
-    check_race_id(race_id)
+        # Check for race's existence
+        check_race_id(race_id)
 
     # Find and check the candidate
     candidate = session.query(models.Candidate).get(cand_id)
@@ -161,20 +169,25 @@ def candidate_get(elect_id, race_id, cand_id):
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes", 
     methods=["GET"])
+@app.route("/api/votes", methods=["GET"])
 @decorators.accept("application/json")
-def votes_get(elect_id, race_id, cand_id):
-    """ Returns a list of votes cast for a specific candidate """
-    # Check for election's existence
-    check_election_id(elect_id)
+def votes_get(elect_id=None, race_id=None, cand_id=None):
+    """ Returns a list of votes cast """
 
-    # Check for race's existence
-    check_race_id(race_id)
+    if elect_id and race_id and cand_id:
+        # Check for election's existence
+        check_election_id(elect_id)
 
-    # Check for candidate's existence
-    check_cand_id(cand_id)
+        # Check for race's existence
+        check_race_id(race_id)
 
-    # Finds, checks, and returns a list of votes cast for candidate
-    votes = session.query(models.Vote).filter(models.Vote.candidate_id == cand_id)
+        # Check for candidate's existence
+        check_cand_id(cand_id)
+        # Finds, checks, and returns a list of votes cast for candidate
+        votes = session.query(models.Vote).filter(models.Vote.candidate_id == cand_id)
+    else:
+        votes = session.query(models.Vote)
+
     votes = votes.order_by(models.Vote.id)
 
     if not votes:
@@ -187,17 +200,19 @@ def votes_get(elect_id, race_id, cand_id):
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes/<int:vote_id>", 
     methods=["GET"])
+@app.route("/api/votes/<int:vote_id>", methods=["GET"])
 @decorators.accept("application/json")
-def vote_get(elect_id, race_id, cand_id, vote_id):
+def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
     """ Returns information regarding a vote cast """
-    # Check for election's existence
-    check_election_id(elect_id)
+    if elect_id and race_id and cand_id:
+        # Check for election's existence
+        check_election_id(elect_id)
 
-    # Check for race's existence
-    check_race_id(race_id)
+        # Check for race's existence
+        check_race_id(race_id)
 
-    # Check for candidate's existence
-    check_cand_id(cand_id)
+        # Check for candidate's existence
+        check_cand_id(cand_id)
 
     # Finds, checks, and returns a list of votes cast for candidate
     vote = session.query(models.Vote).get(vote_id)
@@ -211,8 +226,7 @@ def vote_get(elect_id, race_id, cand_id, vote_id):
     return Response(data, 200, mimetype="application/json")
 
 
-@app.route("/api/users/<int:user_id>", 
-    methods=["GET"])
+@app.route("/api/users/<int:user_id>", methods=["GET"])
 @decorators.accept("application/json")
 def user_get(user_id):
     """ Returns information about a specific user """
@@ -255,3 +269,4 @@ def type_get(type_id):
 
     data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
+
