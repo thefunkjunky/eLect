@@ -6,14 +6,13 @@ try: from urllib.parse import urlparse
 except ImportError: from urlparse import urlparse # Py2 compatibility
 from io import StringIO
 
-import sys; 
+import sys
 # print(list(sys.modules.keys()))
 # Configure our app to use the testing databse
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
 from eLect.main import app
 from eLect import models
-from eLect.utils import upload_path
 from eLect.database import Base, engine, session
 
 
@@ -165,6 +164,17 @@ class TestAPI(unittest.TestCase):
         candidate = json.loads(response.data.decode("ascii"))
         self.assertEqual(candidate["title"], "Candidate BB")
         self.assertEqual(candidate["race_id"], candidateBB.race_id)
+
+    def test_get_nonexistant_data(self):
+        """ Tests GET requests for nonexistant data """
+        response = self.client.get("/api/elections/1",
+            headers=[("Accept", "application/json")])
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.mimetype, "application/json")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["message"], "Could not find election with id 1")
 
 
 
