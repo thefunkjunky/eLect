@@ -77,11 +77,11 @@ class TestAPI(unittest.TestCase):
             candidate_id = candidateAA.id,
             user_id = userA.id)
         voteA2 = models.Vote(
-            value = 0,
+            value = 1,
             candidate_id = candidateAA.id,
             user_id = userB.id)
         voteB1 = models.Vote(
-            value = 0,
+            value = 1,
             candidate_id = candidateBA.id,
             user_id = userA.id)
         voteB2 = models.Vote(
