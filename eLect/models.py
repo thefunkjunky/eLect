@@ -1,5 +1,5 @@
 import os.path
-from datetime import datetime
+import datetime
 
 from flask import url_for
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Sequence, ForeignKey
@@ -45,13 +45,14 @@ class Election(Base):
     title = Column(String(128), nullable=False)
     description_short = Column(String(1000))
     description_long = Column(String(60000))
-    start_date = Column(DateTime, nullable=False)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
     end_date = Column(DateTime)
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     elect_open = Column(Boolean, nullable=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
     default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
-    races = relationship("Race", backref="election")
+    races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     administrator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
@@ -63,8 +64,9 @@ class Election(Base):
         "description_long": self.description_long,
         "start_date": self.start_date,
         "end_date": self.end_date,
+        "last_modified": self.last_modified,
         "elect_open": self.elect_open,
-        "default_elect_type": self.default_elect_type,
+        "default_election_type": self.default_elect_type,
         "administrator_id": self.administrator_id,
         }
         return election
@@ -81,7 +83,7 @@ class Race(Base):
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
     elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
-    candidates = relationship("Candidate", backref="race")
+    candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
     def as_dictionary(self):
         race = {

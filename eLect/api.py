@@ -38,6 +38,7 @@ def check_cand_id(cand_id):
 
 
 ### Define the API endpoints
+# GET endpoints
 @app.route("/api/elections", methods=["GET"])
 @decorators.accept("application/json")
 def elections_get():
@@ -123,7 +124,7 @@ def race_get(race_id, elect_id=None):
 @decorators.accept("application/json")
 def candidates_get(elect_id=None, race_id=None):
     """ Returns a list of candidates """
-    if elect_id and race_id:
+    if elect_id or race_id:
         # Check for election's existence
         check_election_id(elect_id)
         # Check for race's existence
@@ -148,7 +149,7 @@ def candidates_get(elect_id=None, race_id=None):
 @decorators.accept("application/json")
 def candidate_get(cand_id, elect_id=None, race_id=None):
     """ Returns information for a single candidate """
-    if elect_id and race_id:
+    if elect_id or race_id:
         # Check for election's existence
         check_election_id(elect_id)
 
@@ -174,7 +175,7 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
 def votes_get(elect_id=None, race_id=None, cand_id=None):
     """ Returns a list of votes cast """
 
-    if elect_id and race_id and cand_id:
+    if elect_id or race_id or cand_id:
         # Check for election's existence
         check_election_id(elect_id)
 
@@ -204,7 +205,7 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
 @decorators.accept("application/json")
 def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
     """ Returns information regarding a vote cast """
-    if elect_id and race_id and cand_id:
+    if elect_id or race_id or cand_id:
         # Check for election's existence
         check_election_id(elect_id)
 
@@ -270,3 +271,202 @@ def type_get(type_id):
     data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
+
+# POST endpoints
+@app.route("/api/elections", methods=["POST"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def election_post():
+    """ Add new election """
+    data = request.json
+
+    # # Validate submitted header data, as json, against post_schema
+    # try:
+    #     validate(data, post_schema)
+    # except ValidationError as error:
+    #     data = {"message": error.message}
+    #     return Response(json.dumps(data), 422, mimetype="application/json")
+
+    # Check if Election title already exists
+    duplicate_election = session.query(models.Election).filter(
+        models.Election.title == data["title"])
+    if duplicate_election:
+            message = "Election with title {} already exists, id #{}.".format(
+                election.title, election.id)
+            data = json.dumps({"message": message})
+            return Response(data, 403, mimetype="application/json")
+
+    # Add the election to the database
+    election = models.Election(
+        title = data["title"],
+        description_short = data["description_short"],
+        description_long = data["description_long"],
+        end_date = data["end_date"],
+        elect_open = data["elect_open"],
+        default_elect_type = data["default_election_type"],
+        administrator_id = data["administrator_id"]
+        )
+    session.add(election)
+    session.commit()
+
+    # Return a 201 Created, containing the election as JSON and with the 
+    # Location header set to the location of the election
+    data = json.dumps(election.as_dictionary())
+    headers = {"Location": url_for("election_get", elect_id=election.id)}
+    return Response(data, 201, headers=headers, mimetype="application/json")
+
+@app.route("/api/races", methods=["POST"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def race_post():
+    """ Add new race """
+    data = request.json
+
+    # Validate header data vs. schema
+
+    # Check if election exists
+    check_election_id(data["election_id"])
+
+    # Check if race title already exists in election
+    election = session.query(models.Elections).filter(
+        models.Election.title == data["title"])
+    for race in election.races:
+        if race.title == data["title"]:
+                message = "Race with title {} already exists in election with id #{}.".format(
+                    race.title, election.id)
+                data = json.dumps({"message": message})
+                return Response(data, 403, mimetype="application/json")
+
+    # Add the race to the database
+    race = models.Race(
+        title = data["title"],
+        description_short = data["description_short"],
+        description_long = data["description_long"],
+        end_date = data["end_date"],
+        election_id = data["election_id"],
+        election_type = data["election_type"],
+        )
+    session.add(race)
+    session.commit()
+
+    # Return a 201 Created, containing the election as JSON and with the 
+    # Location header set to the location of the election
+    data = json.dumps(race.as_dictionary())
+    headers = {"Location": url_for("race_get", race_id=race.id)}
+    return Response(data, 201, headers=headers, mimetype="application/json")
+
+@app.route("/api/candidates", methods=["POST"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def candidate_post():
+    """ Add new candidate """
+    data = request.json
+
+    # Validate header data vs. schema
+
+    # Check if race exists
+    check_race_id(data["race_id"])
+
+    # Check if candidate title already exists in race
+    race = session.query(models.Race).filter(
+        models.Race.id == data["race_id"])
+    for candidate in race.candidates:
+        if candidate.title == data["title"]:
+            message = "Candidate with title {} already exists in race id #{}.".format(
+                candidate.title, race.id)
+            data = json.dumps({"message": message})
+            return Response(data, 403, mimetype="application/json")
+    
+    # Add the candidate to the database
+    candidate = models.Candidate(
+        title = data["title"],
+        description_short = data["description_short"],
+        description_long = data["description_long"],
+        race_id = data["race_id"]
+        )
+    session.add(candidate)
+    session.commit()
+
+    # Return a 201 Created, containing the candidate as JSON and with the 
+    # Location header set to the location of the candidate
+    data = json.dumps(candidate.as_dictionary())
+    headers = {"Location": url_for("candidate_get", cand_id=candidate.id)}
+    return Response(data, 201, headers=headers, mimetype="application/json")
+
+@app.route("/api/votes", methods=["POST"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def vote_post():
+    """ Add new vote """
+    data = request.json
+
+    # Validate header data vs. schema
+
+    # Check if candidate exists
+    check_cand_id(data["cand_id"])
+
+    # Check if election is still currently open
+    candidate = session.query(models.Candidate).filter(
+        models.Candidate.id == data["candidate_id"])
+    if not candidate.race.election.elect_open:
+        message = "Election with id {} is currently closed, and not accepting new votes.".format(
+            candidate.race.election.id)
+        data = json.dumps({"message": message})
+        return Response(data, 403, mimetype="application/json")
+
+    # Check if user already voted for this candidate
+    existing_vote = session.query(models.Vote).filter(
+        models.Vote.user_id == data["user_id"],
+        models.Vote.candidate_id == data["candidate_id"])
+    if existing_vote:
+        message = "User with id {} has already voted for candidate with id {}.".format(
+            data["user_id"],
+            data["candidate_id"]])
+        data = json.dumps({"message": message})
+        return Response(data, 403, mimetype="application/json")
+
+    # Add the vote to the database
+    vote = models.Vote(
+        value = data["value"],
+        candidate_id = data["candidate_id"],
+        user_id = data["user_id"]
+        )
+    session.add(vote)
+    session.commit()
+
+    # Return a 201 Created, containing the vote as JSON and with the 
+    # Location header set to the location of the candidate
+    data = json.dumps(vote.as_dictionary())
+    headers = {"Location": url_for("races_get", race_id=candidate.race.id)}
+    return Response(data, 201, headers=headers, mimetype="application/json")
+
+@app.route("/api/users", methods=["POST"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def user_post():
+    """ Add new user """
+    data = request.json
+
+    # Check if user already exists
+    duplicate_user = session.query(models.User).filter(
+        models.User.email == data["email"])
+    if duplicate_user:
+            message = "User with email {} already exists.".format(
+                duplicate_user.id)
+            data = json.dumps({"message": message})
+            return Response(data, 403, mimetype="application/json")
+
+    # Add the user to the database
+    user = models.User(
+        name = data["name"],
+        email = data["email"],
+        password = data["password"],
+        )
+    session.add(user)
+    session.commit()
+
+    # Return a 201 Created, containing the election as JSON and with the 
+    # Location header set to the location of the election
+    data = json.dumps(user.as_dictionary())
+    headers = {"Location": url_for("elections_get")}
+    return Response(data, 201, headers=headers, mimetype="application/json")
