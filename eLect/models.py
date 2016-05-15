@@ -45,10 +45,11 @@ class Election(Base):
     title = Column(String(128), nullable=False)
     description_short = Column(String(1000))
     description_long = Column(String(60000))
-    start_date = Column(DateTime, default=datetime.datetime.utcnow())
-    end_date = Column(DateTime)
-    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
-    elect_open = Column(Boolean, default=0) #look into types.Boolean() create_constraint
+    ## datetime not json serializable.  need to fix
+    # start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    # end_date = Column(DateTime)
+    # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
+    elect_open = Column(Boolean, default=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
     default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
@@ -62,9 +63,9 @@ class Election(Base):
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
-        "start_date": self.start_date,
-        "end_date": self.end_date,
-        "last_modified": self.last_modified,
+        # "start_date": self.start_date,
+        # "end_date": self.end_date,
+        # "last_modified": self.last_modified,
         "elect_open": self.elect_open,
         "default_election_type": self.default_elect_type,
         "admin_id": self.admin_id,
@@ -82,7 +83,7 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    election_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
+    election_type = Column(Integer, ForeignKey('elect_type.id'))
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
     def as_dictionary(self):

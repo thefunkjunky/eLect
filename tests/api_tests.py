@@ -28,83 +28,92 @@ class TestAPI(unittest.TestCase):
         Base.metadata.create_all(engine)
 
     def populate_database(self):
-        userA = models.User(
+        self.userA = models.User(
             name = "UserA",
             email = "userA@eLect.com",
             password = "asdf")
-        userB = models.User(
+        self.userB = models.User(
             name = "UserB",
             email = "userB@eLect.com",
             password = "asdf")
-        typeA = models.ElectionType(
+
+        session.add_all([self.userA,self.userB])
+        session.commit()
+
+        self.typeA = models.ElectionType(
             title = "Election type A"
             )
-        typeB = models.ElectionType(
+        self.typeB = models.ElectionType(
             title = "Election type B"
             )
-        electionA = models.Election(
-            title = "Election A",
-            default_elect_type = typeA.id,
-            admin_id = userA.id
-            )
-        electionB = models.Election(
-            title = "Election A",
-            default_elect_type = typeB.id,
-            admin_id = userB.id
-            )
-        raceA = models.Race(
-            title = "Race A",
-            election_id = electionA.id
-            )
-        raceB = models.Race(
-            title = "Race B",
-            election_id = electionB.id
-            )
-        candidateAA = models.Candidate(
-            title = "Candidate AA",
-            race_id = raceA.id)
-        candidateAB = models.Candidate(
-            title = "Candidate AB",
-            race_id = raceA.id)
-        candidateBA = models.Candidate(
-            title = "Candidate BA",
-            race_id = raceB.id)
-        candidateBB = models.Candidate(
-            title = "Candidate BB",
-            race_id = raceB.id)
-        voteA1 = models.Vote(
-            value = 1,
-            candidate_id = candidateAA.id,
-            user_id = userA.id)
-        voteA2 = models.Vote(
-            value = 1,
-            candidate_id = candidateAA.id,
-            user_id = userB.id)
-        voteB1 = models.Vote(
-            value = 1,
-            candidate_id = candidateBA.id,
-            user_id = userA.id)
-        voteB2 = models.Vote(
-            value = 1,
-            candidate_id = candidateBB.id,
-            user_id = userB.id)
 
-        session.add_all([userA,
-            userB,
-            typeA,
-            typeB,
-            electionA,
-            electionB,
-            raceA,
-            raceB,
-            candidateAA,
-            candidateAB,
-            candidateBA,
-            candidateBB,
-            voteA1,
-            voteA2,
-            voteB1,
-            voteB2])
+        session.add_all([self.typeA,self.typeB])
+        session.commit()
+
+        self.electionA = models.Election(
+            title = "Election A",
+            default_elect_type = self.typeA.id,
+            admin_id = self.userA.id
+            )
+        self.electionB = models.Election(
+            title = "Election B",
+            default_elect_type = self.typeB.id,
+            admin_id = self.userB.id
+            )
+
+        session.add_all([self.electionA,self.electionB])
+        session.commit()
+
+        self.raceA = models.Race(
+            title = "Race A",
+            election_id = self.electionA.id
+            )
+        self.raceB = models.Race(
+            title = "Race B",
+            election_id = self.electionB.id
+            )
+
+        session.add_all([self.raceA,self.raceB])
+        session.commit()
+
+        self.candidateAA = models.Candidate(
+            title = "Candidate AA",
+            race_id = self.raceA.id)
+        self.candidateAB = models.Candidate(
+            title = "Candidate AB",
+            race_id = self.raceA.id)
+        self.candidateBA = models.Candidate(
+            title = "Candidate BA",
+            race_id = self.raceB.id)
+        self.candidateBB = models.Candidate(
+            title = "Candidate BB",
+            race_id = self.raceB.id)
+
+        session.add_all([self.candidateAA,self.candidateAB,self.candidateBA,self.candidateBB])
+        session.commit()
+
+        self.voteA1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userA.id)
+        self.voteA2 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userB.id)
+        self.voteB1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateBA.id,
+            user_id = self.userA.id)
+        self.voteB2 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateBB.id,
+            user_id = self.userB.id)
+
+        session.add_all([
+            self.voteA1,
+            self.voteA2,
+            self.voteB1,
+            self.voteB2])
         session.commit()
 
     def test_get_empty_datasets(self):
@@ -123,9 +132,9 @@ class TestAPI(unittest.TestCase):
     def test_get_election(self):
         """ Testing GET method on /api/elections endpoint """
         self.populate_database()
-        electionB = session.query(models.Election).filter(
-            models.Election.title == "Election B")
-        response = self.client.get("/api/elections/{}".format(electionB.id),
+        # electionB = session.query(models.Election).filter(
+        #     models.Election.title == "Election B")
+        response = self.client.get("/api/elections/{}".format(self.electionB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)
@@ -133,14 +142,14 @@ class TestAPI(unittest.TestCase):
 
         election = json.loads(response.data.decode("ascii"))
         self.assertEqual(election["title"], "Election B")
-        self.assertEqual(election["admin_id"], electionB.admin_id)
+        self.assertEqual(election["admin_id"], self.electionB.admin_id)
 
     def test_get_race(self):
         """ Testing GET method on /api/races endpoint """
         self.populate_database()
-        raceB = session.query(models.Race).filter(
-            models.Race.title == "Race B")
-        response = self.client.get("/api/races/{}".format(raceB.id),
+        # raceB = session.query(models.Race).filter(
+        #     models.Race.title == "Race B")
+        response = self.client.get("/api/races/{}".format(self.raceB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)
@@ -148,14 +157,14 @@ class TestAPI(unittest.TestCase):
 
         race = json.loads(response.data.decode("ascii"))
         self.assertEqual(race["title"], "Race B")
-        self.assertEqual(race["election_type"], raceB.election_type)
+        self.assertEqual(race["election_type"], self.raceB.election_type)
 
     def test_get_candidate(self):
         """ Testing GET method on /api/candidates endpoint """
         self.populate_database()
-        candidateBB = session.query(models.Candidate).filter(
-            models.Candidate.title == "Candidate BB")
-        response = self.client.get("/api/candidates/{}".format(candidateBB.id),
+        # candidateBB = session.query(models.Candidate).filter(
+        #     models.Candidate.title == "Candidate BB")
+        response = self.client.get("/api/candidates/{}".format(self.candidateBB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)
@@ -163,7 +172,7 @@ class TestAPI(unittest.TestCase):
 
         candidate = json.loads(response.data.decode("ascii"))
         self.assertEqual(candidate["title"], "Candidate BB")
-        self.assertEqual(candidate["race_id"], candidateBB.race_id)
+        self.assertEqual(candidate["race_id"], self.candidateBB.race_id)
 
     def test_get_nonexistant_data(self):
         """ Tests GET requests for nonexistant data """
