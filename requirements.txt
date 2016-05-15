@@ -1,0 +1,9 @@
+Flask
+Jinja2
+MarkupSafe
+SQLAlchemy
+Werkzeug
+itsdangerous
+jsonschema
+nose
+psycopg2
