@@ -48,7 +48,7 @@ class Election(Base):
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     end_date = Column(DateTime)
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
-    elect_open = Column(Boolean, nullable=False) #look into types.Boolean() create_constraint
+    elect_open = Column(Boolean, default=0) #look into types.Boolean() create_constraint
 
     # Foreign relationships
     default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
@@ -82,7 +82,7 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
+    election_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
     def as_dictionary(self):
@@ -92,7 +92,7 @@ class Race(Base):
         "description_short": self.description_short,
         "description_long": self.description_long,
         "election_id": self.election_id,
-        "elect_type": self.elect_type,
+        "election_type": self.election_type,
         }
         return race
 
@@ -107,7 +107,7 @@ class Candidate(Base):
 
     # Foreign relationships
     race_id = Column(Integer, ForeignKey('race.id'), nullable=False)
-    votes = relationship("Vote", backref="candidate")
+    votes = relationship("Vote", backref="candidate", cascade="all, delete-orphan")
 
     def as_dictionary(self):
         candidate = {
@@ -124,7 +124,7 @@ class Vote(Base):
     """ Vote class scheme """
     __tablename__ = "vote"
     id = Column(Integer, primary_key=True)
-    value = Column(Integer, nullable=False)
+    value = Column(Integer, nullable=False, default=0)
     
     # Foreign relationships
     candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)

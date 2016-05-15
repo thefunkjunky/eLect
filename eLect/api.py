@@ -38,7 +38,10 @@ def check_cand_id(cand_id):
 
 
 ### Define the API endpoints
+############################
 # GET endpoints
+############################
+
 @app.route("/api/elections", methods=["GET"])
 @decorators.accept("application/json")
 def elections_get():
@@ -271,8 +274,10 @@ def type_get(type_id):
     data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
-
+############################
 # POST endpoints
+############################
+
 @app.route("/api/elections", methods=["POST"])
 @decorators.accept("application/json")
 @decorators.require("application/json")
@@ -304,7 +309,7 @@ def election_post():
         end_date = data["end_date"],
         elect_open = data["elect_open"],
         default_elect_type = data["default_election_type"],
-        administrator_id = data["administrator_id"]
+        admin_id = data["admin_id"]
         )
     session.add(election)
     session.commit()
