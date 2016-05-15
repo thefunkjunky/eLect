@@ -54,7 +54,7 @@ class Election(Base):
     default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
     races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
-    administrator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
     def as_dictionary(self):
         election = {
@@ -67,7 +67,7 @@ class Election(Base):
         "last_modified": self.last_modified,
         "elect_open": self.elect_open,
         "default_election_type": self.default_elect_type,
-        "administrator_id": self.administrator_id,
+        "admin_id": self.admin_id,
         }
         return election
 

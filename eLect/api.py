@@ -425,7 +425,7 @@ def vote_post():
     if existing_vote:
         message = "User with id {} has already voted for candidate with id {}.".format(
             data["user_id"],
-            data["candidate_id"]])
+            data["candidate_id"])
         data = json.dumps({"message": message})
         return Response(data, 403, mimetype="application/json")
 

@@ -184,7 +184,4 @@ class TestAPI(unittest.TestCase):
         # Remove the tables and their data from the database
         Base.metadata.drop_all(engine)
 
-        # Delete test upload folder
-        shutil.rmtree(upload_path())
-
 
