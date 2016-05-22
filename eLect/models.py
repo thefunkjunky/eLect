@@ -160,6 +160,7 @@ class ElectionType(Base):
         }
         return elect_type
 
+    # NOTE: be sure that all ElectionType hybrid methods are represented here
     @hybrid_method
     def tally_race(self, race_id):
         pass
