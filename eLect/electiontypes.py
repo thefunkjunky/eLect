@@ -9,7 +9,7 @@ from eLect import models
 from eLect.models import ElectionType
 from eLect.database import Base, engine, session
 
-
+# NOTE: all hybrid methods must be represented in the ElectionType model as well
 
 class WinnerTakeAll(ElectionType):
     """ Winner-Take-All elections class """
