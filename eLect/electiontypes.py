@@ -51,12 +51,12 @@ class WinnerTakeAll(ElectionType):
         return highscore_winners
 
     @hybrid_method
-    def check_results(self, highscore_winners):
+    def check_results(self, results):
         """ Checks the results returned by the WTA tally_race() method """
         # Do I need custom Exceptions here?
-        if len(highscore_winners) < 1:
+        if len(results) < 1:
             raise Exception("No winners found")
-        if len(highscore_winners) > 1:
+        if len(results) > 1:
             raise Exception("Election tied between cand_ids {}".format(
                 list(highscore_winners.keys())))
 

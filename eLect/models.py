@@ -4,6 +4,7 @@ import datetime
 from flask import url_for
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Sequence, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 
 from .database import Base, engine
@@ -83,7 +84,7 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    election_type = Column(Integer, ForeignKey('elect_type.id'))
+    election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
     def as_dictionary(self):
@@ -158,6 +159,14 @@ class ElectionType(Base):
         "description_long": self.description_long,
         }
         return elect_type
+
+    @hybrid_method
+    def tally_race(self, race_id):
+        pass
+
+    @hybrid_method
+    def check_results(self, results):
+        pass
 
 
 

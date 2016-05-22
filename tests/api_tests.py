@@ -231,8 +231,25 @@ class TestAPI(unittest.TestCase):
         winners = session.query(models.Candidate).filter(
             models.Candidate.id.in_(winner_ids)).all()
 
+        response = self.client.get("/api/races/{}/tally".format(self.raceA.id),
+            headers=[("Accept", "application/json")])
+        longURL_response = self.client.get(
+            "/api/elections/{}/races/{}/tally".format(
+                self.electionA.id, self.raceA.id),
+            headers=[("Accept", "application/json")])
+        print("wta http response: ", response)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(longURL_response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(longURL_response.mimetype, "application/json")
+
         self.assertEqual(highscore_winners[1], 2)
         self.assertEqual(winners[0].id, 1)
+        self.assertEqual(1, 0)
+
+        results = json.loads(response.data.decode("ascii"))
+        results_long = json.loads(longURL_response.data.decode("ascii"))
+
 
     def test_tally_WTA_tied(self):
         self.populate_database()
@@ -258,6 +275,7 @@ class TestAPI(unittest.TestCase):
 
         highscore_winners = self.wta.tally_race(self.raceA.id)
         # How to use assertRaises correctly?
+        # I want to make this more specific
         with self.assertRaises(Exception):
             self.wta.check_results(highscore_winners)
 

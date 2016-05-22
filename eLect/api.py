@@ -300,8 +300,8 @@ def type_get(type_id):
     data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally/", methods=["GET"])
-@app.route("/api/races/<int:race_id>/tally/", methods=["GET"])
+@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally", methods=["GET"])
+@app.route("/api/races/<int:race_id>/tally", methods=["GET"])
 @decorators.accept("application/json")
 def get_tally(race_id, elect_id=None):
     """ Tallies results for race [race_id] """
@@ -319,7 +319,7 @@ def get_tally(race_id, elect_id=None):
         return Response(data, 404, mimetype="application/json")
 
     # Finds race type_id
-    type_id = race.query(Race.election_type)
+    type_id = race.election_type
 
     # Finds type with type_id
     elect_type = session.query(models.ElectionType).get(type_id)
@@ -333,10 +333,10 @@ def get_tally(race_id, elect_id=None):
         results = elect_type.tally_race(race_id)
         elect_type.check_results(results)
     except Exception as e:
+        print("Tally error: ", e)
         message = "Tally Error: {}".format(e)
         data = json.dumps({"message": message})
         return Response(data, 400, mimetype="application/json")
-
 
     data = json.dumps(results)
     return Response(data, 200, mimetype="application/json")
