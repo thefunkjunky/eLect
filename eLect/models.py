@@ -53,7 +53,7 @@ class Election(Base):
     elect_open = Column(Boolean, default=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
-    default_elect_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
+    default_election_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
     races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -68,7 +68,7 @@ class Election(Base):
         # "end_date": self.end_date,
         # "last_modified": self.last_modified,
         "elect_open": self.elect_open,
-        "default_election_type": self.default_elect_type,
+        "default_election_type": self.default_election_type,
         "admin_id": self.admin_id,
         }
         return election
@@ -161,13 +161,13 @@ class ElectionType(Base):
         return elect_type
 
     # NOTE: be sure that all ElectionType hybrid methods are represented here
-    @hybrid_method
-    def tally_race(self, race_id):
-        pass
+    # @hybrid_method
+    # def tally_race(self, race_id):
+    #     pass
 
-    @hybrid_method
-    def check_results(self, results):
-        pass
+    # @hybrid_method
+    # def check_results(self, results):
+    #     pass
 
 
 

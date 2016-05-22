@@ -34,6 +34,19 @@ def init_tally_types():
     except Exception as e:
         session.rollback()
 
+### Assign electiontypes model
+# TODO: There has GOT to be a better way to do this
+def assign_election_type(type_id):
+    if type_id == 1:
+        elect_type = WinnerTakeAll()
+        return elect_type
+    if type_id == 2:
+        elect_type = Proportional()
+        return elect_type
+    if type_id == 3:
+        elect_type = Schulze()
+        return elect_type
+
 
 
 # Putting repetitive session query validations here...
@@ -322,7 +335,7 @@ def get_tally(race_id, elect_id=None):
     type_id = race.election_type
 
     # Finds type with type_id
-    elect_type = session.query(models.ElectionType).get(type_id)
+    elect_type = assign_election_type(type_id)
     if not elect_type:
         message = "Could not find election type with id {}".format(race_id)
         data = json.dumps({"message": message})
@@ -333,7 +346,6 @@ def get_tally(race_id, elect_id=None):
         results = elect_type.tally_race(race_id)
         elect_type.check_results(results)
     except Exception as e:
-        print("Tally error: ", e)
         message = "Tally Error: {}".format(e)
         data = json.dumps({"message": message})
         return Response(data, 400, mimetype="application/json")
@@ -375,7 +387,7 @@ def election_post():
         description_long = data["description_long"],
         end_date = data["end_date"],
         elect_open = data["elect_open"],
-        default_elect_type = data["default_election_type"],
+        default_election_type = data["default_election_type"],
         admin_id = data["admin_id"]
         )
     session.add(election)

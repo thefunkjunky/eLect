@@ -60,12 +60,12 @@ class TestAPI(unittest.TestCase):
 
         self.electionA = models.Election(
             title = "Election A",
-            default_elect_type = self.typeA.id,
+            default_election_type = self.typeA.id,
             admin_id = self.userA.id
             )
         self.electionB = models.Election(
             title = "Election B",
-            default_elect_type = self.typeB.id,
+            default_election_type = self.typeB.id,
             admin_id = self.userB.id
             )
 
@@ -237,7 +237,6 @@ class TestAPI(unittest.TestCase):
             "/api/elections/{}/races/{}/tally".format(
                 self.electionA.id, self.raceA.id),
             headers=[("Accept", "application/json")])
-        print("wta http response: ", response)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
@@ -245,10 +244,13 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(highscore_winners[1], 2)
         self.assertEqual(winners[0].id, 1)
-        self.assertEqual(1, 0)
 
         results = json.loads(response.data.decode("ascii"))
         results_long = json.loads(longURL_response.data.decode("ascii"))
+        # I don't know why it turns the key into a str, but the value is still int
+        self.assertEqual(results["1"], 2)
+        self.assertEqual(results_long["1"], 3)
+
 
 
     def test_tally_WTA_tied(self):

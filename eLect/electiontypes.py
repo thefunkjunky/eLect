@@ -14,7 +14,7 @@ from eLect.database import Base, engine, session
 class WinnerTakeAll(ElectionType):
     """ Winner-Take-All elections class """
     def __init__(self):
-        # super(WinnerTakeAll, self).__init__()
+        super().__init__()
         # self.id = 1
         self.title = "Winner-Take-All"
         self.description_short = "Voter may choose only one of all the candidates, and only one winner may be declared." 
@@ -23,7 +23,7 @@ class WinnerTakeAll(ElectionType):
 
     @hybrid_method
     def tally_race(self, race_id):
-        """ Tallies the votes for a race. Returns a dict of cand.ids:score """
+        """ Tallies the votes for a race. Returns a dict of {cand.ids:score} """
 
         # # The easy-to-read way of doing this
         try:
@@ -54,11 +54,14 @@ class WinnerTakeAll(ElectionType):
     def check_results(self, results):
         """ Checks the results returned by the WTA tally_race() method """
         # Do I need custom Exceptions here?
+        if not results:
+            raise Exception("No results found")
         if len(results) < 1:
             raise Exception("No winners found")
         if len(results) > 1:
             raise Exception("Election tied between cand_ids {}".format(
                 list(highscore_winners.keys())))
+        
 
 
 class Proportional(ElectionType):
