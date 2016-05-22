@@ -149,9 +149,6 @@ class ElectionType(Base):
     description_short = Column(String(1000))
     description_long = Column(String(60000))
 
-    # Foreign relationships
-    # elections = relationship("Election", backref="default_type")
-    # races = relationship("Race", backref="elect_type")
 
     def as_dictionary(self):
         elect_type = {

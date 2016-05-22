@@ -15,7 +15,7 @@ os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 from eLect.main import app
 from eLect import models
 from eLect.database import Base, engine, session
-from eLect.electiontypes import WinnerTakeAll
+from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze, init_tally_types, drop_tally_types
 
 
 
@@ -28,6 +28,13 @@ class TestAPI(unittest.TestCase):
 
         # Set up the tables in the database
         Base.metadata.create_all(engine)
+
+        # Add election types
+        self.wta = WinnerTakeAll()
+        self.proportional = Proportional()
+        self.schulze = Schulze()
+        session.add_all([self.wta, self.proportional, self.schulze])
+        session.commit()
 
     def populate_database(self):
         self.userA = models.User(
@@ -106,11 +113,10 @@ class TestAPI(unittest.TestCase):
 
     def test_get_empty_datasets(self):
         """ Getting elections, races, etc from an empty database """
-        endpoints = ["elections", "races", "candidates", "votes", "types"]
+        endpoints = ["elections", "races", "candidates", "votes"]
         for endpoint in endpoints:
             response = self.client.get("/api/{}".format(endpoint),
                 headers=[("Accept", "application/json")])
-            print(endpoint)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.mimetype, "application/json")
 
@@ -145,6 +151,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(longURL_response.mimetype, "application/json")
 
         race = json.loads(response.data.decode("ascii"))
         race_long = json.loads(longURL_response.data.decode("ascii"))
@@ -155,17 +162,23 @@ class TestAPI(unittest.TestCase):
     def test_get_candidate(self):
         """ Testing GET method on /api/candidates endpoint """
         self.populate_database()
-        # candidateBB = session.query(models.Candidate).filter(
-        #     models.Candidate.title == "Candidate BB")
         response = self.client.get("/api/candidates/{}".format(self.candidateBB.id),
+            headers=[("Accept", "application/json")])
+        longURL_response = self.client.get(
+            "/api/elections/{}/races/{}/candidates/{}".format(
+                self.electionA.id, self.raceB.id, self.candidateBB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(longURL_response.mimetype, "application/json")
 
         candidate = json.loads(response.data.decode("ascii"))
+        candidate_long = json.loads(longURL_response.data.decode("ascii"))
         self.assertEqual(candidate["title"], "Candidate BB")
         self.assertEqual(candidate["race_id"], self.candidateBB.race_id)
+        self.assertEqual(candidate_long["race_id"], self.candidateBB.race_id)
 
     def test_get_nonexistant_data(self):
         """ Tests GET requests for nonexistant data """
@@ -211,16 +224,41 @@ class TestAPI(unittest.TestCase):
             self.voteB2])
         session.commit()
 
-        wta = WinnerTakeAll()
-
-        highscore, highscore_winners = wta.tally_race(self.raceA.id)
-        winner_ids = [cand for cand in highscore_winners]
+        highscore_winners = self.wta.tally_race(self.raceA.id)
+        winner_ids = list(highscore_winners.keys())
         winners = session.query(models.Candidate).filter(
             models.Candidate.id.in_(winner_ids)).all()
 
-        self.assertEqual(highscore, 2)
+        self.assertEqual(highscore_winners[1], 2)
         self.assertEqual(winners[0].id, 1)
 
+    def test_tally_proportional(self):
+        self.populate_database()
+
+        self.voteA1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userA.id)
+        self.voteA2 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userB.id)
+        self.voteA3 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAB.id,
+            user_id = self.userC.id)
+
+
+        session.add_all([
+            self.voteA1,
+            self.voteA2,
+            self.voteA3])
+        session.commit()
+
+        results = self.proportional.tally_race(self.raceA.id)
+        print("results {}".format(results))
+
+        self.assertEqual(1,0)
 
 
     def tearDown(self):

@@ -9,8 +9,15 @@ from . import models
 from . import decorators
 from eLect.main import app
 from .database import session
+from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze, init_tally_types, drop_tally_types
 
 # schemas for schema validation go here...
+
+
+### Init election types 
+# Where should this go?  This seems like a bad place
+drop_tally_types()
+init_tally_types()
 
 
 # Putting repetitive session query validations here...
@@ -275,6 +282,38 @@ def type_get(type_id):
         return Response(data, 404, mimetype="application/json")
 
     data = json.dumps(elect_type.as_dictionary())
+    return Response(data, 200, mimetype="application/json")
+
+@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally/<int:type_id>", methods=["GET"])
+@app.route("/api/races/<int:race_id>/tally/<int:type_id>", methods=["GET"])
+@decorators.accept("application/json")
+def get_tally(race_id, tally_id, elect_id=None):
+    """ Tallies results for race [race_id] """
+    # Check for election's existence, if elect_id is included
+    if elect_id:
+        check_election_id(elect_id)
+
+    # Finds race with race_id
+    race = session.query(models.Race).get(race_id)
+
+    # Check for race's existence
+    if not race:
+        message = "Could not find race with id {}".format(race_id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
+    # Finds type with tally_id
+    elect_type = session.query(models.ElectionType).get(type_id)
+    if not elect_type:
+        message = "Could not find election type with id {}".format(race_id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
+    # Init tally object
+    results = elect_type.tally_race(race_id)
+
+
+    data = json.dumps(race.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
 ############################

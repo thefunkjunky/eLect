@@ -3,23 +3,27 @@ import json
 from operator import itemgetter
 
 from sqlalchemy.sql import func
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from eLect.main import app
 from eLect import models
+from eLect.models import ElectionType
 from eLect.database import Base, engine, session
 
 
 
-class WinnerTakeAll:
-    """ Winner-Take-All elections class"""
+class WinnerTakeAll(ElectionType):
+    """ Winner-Take-All elections class """
     def __init__(self):
         # super(WinnerTakeAll, self).__init__()
+        # self.id = 1
         self.title = "Winner-Take-All"
         self.description_short = "Voter may choose only one of all the candidates, and only one winner may be declared." 
         self.description_long = "Good for up/down single vote issues and proposals,\n"\
         " and two-party races."
 
+    @hybrid_method
     def tally_race(self, race_id):
-        """ Tallies the votes for a race """
+        """ Tallies the votes for a race. Returns a dict of cand.ids:score """
 
         # # The easy-to-read way of doing this
         results = session.query(
@@ -37,31 +41,56 @@ class WinnerTakeAll:
         #     models.Vote.candidate_id).all()
 
         highscore = max(results, key=itemgetter(0))[0]
-        highscore_winners = [cand for score, cand in results if score == highscore]
+        highscore_winners = {cand:score for score, cand in results if score == highscore}
 
-        return highscore, highscore_winners
+        return highscore_winners
+
+    @hybrid_method
+    def check_results(self, highscore_winners):
+        if len(highscore_winners) > 1:
+            raise Exception("Error: Election tied between") 
 
 
 
-class Proportional:
-    """ Proportional elections class"""
+
+class Proportional(ElectionType):
+    """ Proportional elections class. Returns a dict of cand.ids:score"""
     def __init__(self):
         # super(Proportional, self).__init__()
+        # self.id = 2
         self.title = "Proportional"
         self.description_short = "Voter may choose only one of all the candidates, but all candidates are tallied proportionally in percentages." 
         self.description_long = "Good for determining each candidate's percentage \n"\
         "of the overall vote, and Parliamentary-style elections."
 
+    @hybrid_method
     def tally_race(self, race_id):
         """ Tallies the votes for a race """
-        race = session.query("models.Race").get(race_id)
 
-class Schulze:
+        # # The easy-to-read way of doing this
+        results = session.query(
+            func.sum(models.Vote.value)).add_column(
+            models.Vote.candidate_id).filter(
+            models.Vote.candidate.has(race_id = race_id)).group_by(
+            models.Vote.candidate_id).all()
+
+        total_scores = session.query(
+            func.sum(models.Vote.value)).filter(
+            models.Vote.candidate.has(race_id = race_id))[0][0]
+
+        calculated_results = {cand: score/total_scores for score, cand in results}
+
+        return calculated_results
+
+
+
+class Schulze(ElectionType):
     """ Schulze elections class """
     def __init__(self):
         # super(Schulze, self).__init__()
+        # self.id = 3
         self.title = "Schulze (Condorcet)"
-        self.description_short = "Voter may rank all candidates in relation to each other." 
+        self.description_short = "Voter may rank ALL candidates in relation to each other." 
         self.description_long = "Offers voters the most power for their vote.\n"\
         "Ability to rank all candidates relative to each other allows voters to give\n"\
         "higher preferences to their preferred candidates, without taking votes away\n"\
@@ -69,8 +98,25 @@ class Schulze:
         "prevents ties and eliminates the need for recounts, among other advantages.\n\n"\
         "The best option for races with 3 or more candidates, that must end with a single winner."
 
+    @hybrid_method
     def tally_race(self, race_id):
         """ Tallies the votes for a race """
         race = session.query("models.Race").get(race_id)
 
+def init_tally_types():
+    try:
+        wta = WinnerTakeAll()
+        proportional = Proportional()
+        schulze = Schulze()
+        session.add_all([wta, proportional, schulze])
+        session.commit()
+    except Exception as e:
+        session.rollback()
 
+def drop_tally_types():
+    try:
+        num_rows_deleted = session.query(
+            models.ElectionType).delete()
+        session.commit()
+    except Exception as e:
+        session.rollback()
