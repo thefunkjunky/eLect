@@ -20,8 +20,6 @@ class WinnerTakeAll:
 
     def tally_race(self, race_id):
         """ Tallies the votes for a race """
-        # race = session.query(models.Race).get(race_id)
-        # candidates = race.candidates
 
         # # The easy-to-read way of doing this
         results = session.query(
@@ -41,7 +39,7 @@ class WinnerTakeAll:
         highscore = max(results, key=itemgetter(0))[0]
         highscore_winners = [cand for score, cand in results if score == highscore]
 
-        return results, highscore_winners
+        return highscore, highscore_winners
 
 
 

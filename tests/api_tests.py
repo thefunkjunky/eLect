@@ -186,7 +186,7 @@ class TestAPI(unittest.TestCase):
             candidate_id = self.candidateAA.id,
             user_id = self.userA.id)
         self.voteA2 = models.Vote(
-            value = 0,
+            value = 1,
             candidate_id = self.candidateAA.id,
             user_id = self.userB.id)
         self.voteA3 = models.Vote(
@@ -211,15 +211,15 @@ class TestAPI(unittest.TestCase):
             self.voteB2])
         session.commit()
 
-
         wta = WinnerTakeAll()
-        response = self.client.get("/api/race/{}".format(self.candidateBB.id),
-            headers=[("Accept", "application/json")])
 
-        results, highscore_winners = wta.tally_race(self.raceA.id)
+        highscore, highscore_winners = wta.tally_race(self.raceA.id)
         winner_ids = [cand for cand in highscore_winners]
         winners = session.query(models.Candidate).filter(
             models.Candidate.id.in_(winner_ids)).all()
+
+        self.assertEqual(highscore, 2)
+        self.assertEqual(winners[0].id, 1)
 
 
 
