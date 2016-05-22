@@ -140,6 +140,7 @@ class Vote(Base):
         }
         return vote
 
+
 class ElectionType(Base):
     """ Election Type class scheme """
     __tablename__ = "elect_type"

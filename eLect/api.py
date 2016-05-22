@@ -85,7 +85,8 @@ def races_get(elect_id = None):
         # QUESTION
         # what is the difference between .filter(SQL expressions),
         # and .filter_by(keyword expressions)?
-        races = session.query(models.Race).filter(Race.election_id == elect_id)
+        races = session.query(models.Race).filter(
+            Race.election_id == elect_id)
     else:
         races = session.query(models.Race)
 
@@ -126,13 +127,15 @@ def race_get(race_id, elect_id=None):
 @decorators.accept("application/json")
 def candidates_get(elect_id=None, race_id=None):
     """ Returns a list of candidates """
-    if elect_id or race_id:
+    if elect_id:
         # Check for election's existence
         check_election_id(elect_id)
+    if race_id:
         # Check for race's existence
         check_race_id(race_id)
         # Find candidates for given election / race
-        candidates = session.query(models.Candidate).filter(models.Race.id == race_id)
+        candidates = session.query(models.Candidate).filter(
+            models.Race.id == race_id)
     else:
         candidates = session.query(models.Candidate)
 
@@ -151,10 +154,10 @@ def candidates_get(elect_id=None, race_id=None):
 @decorators.accept("application/json")
 def candidate_get(cand_id, elect_id=None, race_id=None):
     """ Returns information for a single candidate """
-    if elect_id or race_id:
+    if elect_id: 
         # Check for election's existence
         check_election_id(elect_id)
-
+    if race_id:
         # Check for race's existence
         check_race_id(race_id)
 
@@ -177,17 +180,18 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
 def votes_get(elect_id=None, race_id=None, cand_id=None):
     """ Returns a list of votes cast """
 
-    if elect_id or race_id or cand_id:
+    if elect_id:
         # Check for election's existence
         check_election_id(elect_id)
-
+    if race_id:
         # Check for race's existence
         check_race_id(race_id)
-
+    if cand_id:
         # Check for candidate's existence
         check_cand_id(cand_id)
         # Finds, checks, and returns a list of votes cast for candidate
-        votes = session.query(models.Vote).filter(models.Vote.candidate_id == cand_id)
+        votes = session.query(models.Vote).filter(
+            models.Vote.candidate_id == cand_id)
     else:
         votes = session.query(models.Vote)
 
@@ -207,13 +211,13 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
 @decorators.accept("application/json")
 def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
     """ Returns information regarding a vote cast """
-    if elect_id or race_id or cand_id:
+    if elect_id:
         # Check for election's existence
         check_election_id(elect_id)
-
+    if race_id:
         # Check for race's existence
         check_race_id(race_id)
-
+    if cand_id:
         # Check for candidate's existence
         check_cand_id(cand_id)
 

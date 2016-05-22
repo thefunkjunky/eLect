@@ -5,15 +5,17 @@ import json
 try: from urllib.parse import urlparse
 except ImportError: from urlparse import urlparse # Py2 compatibility
 from io import StringIO
+from operator import itemgetter
 
 import sys
 # print(list(sys.modules.keys()))
-# Configure our app to use the testing databse
+# Configure our app to use the testing database
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
 from eLect.main import app
 from eLect import models
 from eLect.database import Base, engine, session
+from eLect.electiontypes import WinnerTakeAll
 
 
 
@@ -36,8 +38,12 @@ class TestAPI(unittest.TestCase):
             name = "UserB",
             email = "userB@eLect.com",
             password = "asdf")
+        self.userC = models.User(
+                    name = "UserC",
+                    email = "userC@eLect.com",
+                    password = "asdf")
 
-        session.add_all([self.userA,self.userB])
+        session.add_all([self.userA,self.userB, self.userC])
         session.commit()
 
         self.typeA = models.ElectionType(
@@ -89,32 +95,14 @@ class TestAPI(unittest.TestCase):
             title = "Candidate BB",
             race_id = self.raceB.id)
 
-        session.add_all([self.candidateAA,self.candidateAB,self.candidateBA,self.candidateBB])
-        session.commit()
-
-        self.voteA1 = models.Vote(
-            value = 1,
-            candidate_id = self.candidateAA.id,
-            user_id = self.userA.id)
-        self.voteA2 = models.Vote(
-            value = 1,
-            candidate_id = self.candidateAA.id,
-            user_id = self.userB.id)
-        self.voteB1 = models.Vote(
-            value = 1,
-            candidate_id = self.candidateBA.id,
-            user_id = self.userA.id)
-        self.voteB2 = models.Vote(
-            value = 1,
-            candidate_id = self.candidateBB.id,
-            user_id = self.userB.id)
-
         session.add_all([
-            self.voteA1,
-            self.voteA2,
-            self.voteB1,
-            self.voteB2])
+            self.candidateAA,
+            self.candidateAB,
+            self.candidateBA,
+            self.candidateBB])
         session.commit()
+
+
 
     def test_get_empty_datasets(self):
         """ Getting elections, races, etc from an empty database """
@@ -122,7 +110,7 @@ class TestAPI(unittest.TestCase):
         for endpoint in endpoints:
             response = self.client.get("/api/{}".format(endpoint),
                 headers=[("Accept", "application/json")])
-
+            print(endpoint)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.mimetype, "application/json")
 
@@ -147,17 +135,22 @@ class TestAPI(unittest.TestCase):
     def test_get_race(self):
         """ Testing GET method on /api/races endpoint """
         self.populate_database()
-        # raceB = session.query(models.Race).filter(
-        #     models.Race.title == "Race B")
         response = self.client.get("/api/races/{}".format(self.raceB.id),
+            headers=[("Accept", "application/json")])
+        longURL_response = self.client.get(
+            "/api/elections/{}/races/{}".format(
+                self.electionA.id, self.raceB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
 
         race = json.loads(response.data.decode("ascii"))
+        race_long = json.loads(longURL_response.data.decode("ascii"))
         self.assertEqual(race["title"], "Race B")
         self.assertEqual(race["election_type"], self.raceB.election_type)
+        self.assertEqual(race_long["election_type"], self.raceB.election_type)
 
     def test_get_candidate(self):
         """ Testing GET method on /api/candidates endpoint """
@@ -184,6 +177,49 @@ class TestAPI(unittest.TestCase):
 
         data = json.loads(response.data.decode("ascii"))
         self.assertEqual(data["message"], "Could not find election with id 1")
+
+    def test_tally_WTA(self):
+        self.populate_database()
+
+        self.voteA1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userA.id)
+        self.voteA2 = models.Vote(
+            value = 0,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userB.id)
+        self.voteA3 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAB.id,
+            user_id = self.userC.id)
+
+        self.voteB1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateBA.id,
+            user_id = self.userA.id)
+        self.voteB2 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateBB.id,
+            user_id = self.userB.id)
+
+        session.add_all([
+            self.voteA1,
+            self.voteA2,
+            self.voteA3,
+            self.voteB1,
+            self.voteB2])
+        session.commit()
+
+
+        wta = WinnerTakeAll()
+        response = self.client.get("/api/race/{}".format(self.candidateBB.id),
+            headers=[("Accept", "application/json")])
+
+        results, highscore_winners = wta.tally_race(self.raceA.id)
+        winner_ids = [cand for cand in highscore_winners]
+        winners = session.query(models.Candidate).filter(
+            models.Candidate.id.in_(winner_ids)).all()
 
 
 

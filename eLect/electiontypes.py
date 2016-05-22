@@ -1,5 +1,6 @@
 import os
 import json
+from operator import itemgetter
 
 from sqlalchemy.sql import func
 from eLect.main import app
@@ -8,7 +9,7 @@ from eLect.database import Base, engine, session
 
 
 
-class WinnerTakeAll(Object):
+class WinnerTakeAll:
     """ Winner-Take-All elections class"""
     def __init__(self):
         # super(WinnerTakeAll, self).__init__()
@@ -19,25 +20,32 @@ class WinnerTakeAll(Object):
 
     def tally_race(self, race_id):
         """ Tallies the votes for a race """
-        race = session.query(models.Race).get(race_id)
-        candidates = race.candidates
-        # Why does SQLAlchemy make this so god-damn confusing?
-        max_score = session.query(func.max(models.Vote.value)).filter(
-                models.Vote.candidate.race_id == race_id).scalar()
-        # winner = session.query(models.Candidate).filter(
-        #     models.Candidate.race_id == race_id,
-        #     func.sum(models.Vote.Value))
+        # race = session.query(models.Race).get(race_id)
+        # candidates = race.candidates
 
-        # candidate_totalscores = {}
-        # for candidate in candidates:
-        #     votes = candidate.votes
-        #     total_score = session.query(func.sum(models.Vote.value)).filter(
-        #         models.Vote.cand)
-        #     candidate_totalscores[candidate.id] = candidate.votes.
+        # # The easy-to-read way of doing this
+        results = session.query(
+            func.sum(models.Vote.value)).add_column(
+            models.Vote.candidate_id).filter(
+            models.Vote.candidate.has(race_id = race_id)).group_by(
+            models.Vote.candidate_id).all()
+
+        # # The supposedly faster way of doing this
+        # results = session.query(
+        #     func.count(models.Vote.value)).add_column(
+        #     models.Vote.candidate_id).join(
+        #     models.Vote.candidate, aliased = True).filter_by(
+        #     race_id = race_id).group_by(
+        #     models.Vote.candidate_id).all()
+
+        highscore = max(results, key=itemgetter(0))[0]
+        highscore_winners = [cand for score, cand in results if score == highscore]
+
+        return results, highscore_winners
 
 
 
-class Proportional(Object):
+class Proportional:
     """ Proportional elections class"""
     def __init__(self):
         # super(Proportional, self).__init__()
@@ -50,7 +58,7 @@ class Proportional(Object):
         """ Tallies the votes for a race """
         race = session.query("models.Race").get(race_id)
 
-class Schulze(Object):
+class Schulze:
     """ Schulze elections class """
     def __init__(self):
         # super(Schulze, self).__init__()
