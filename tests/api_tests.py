@@ -249,7 +249,7 @@ class TestAPI(unittest.TestCase):
         results_long = json.loads(longURL_response.data.decode("ascii"))
         # I don't know why it turns the key into a str, but the value is still int
         self.assertEqual(results["1"], 2)
-        self.assertEqual(results_long["1"], 3)
+        self.assertEqual(results_long["1"], 2)
 
 
 
@@ -280,6 +280,20 @@ class TestAPI(unittest.TestCase):
         # I want to make this more specific
         with self.assertRaises(Exception):
             self.wta.check_results(highscore_winners)
+
+        response = self.client.get("/api/races/{}/tally".format(self.raceA.id),
+            headers=[("Accept", "application/json")])
+        longURL_response = self.client.get(
+            "/api/elections/{}/races/{}/tally".format(
+                self.electionA.id, self.raceA.id),
+            headers=[("Accept", "application/json")])
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(longURL_response.status_code, 400)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(longURL_response.mimetype, "application/json")
+
+        error = json.loads(response.data.decode("ascii"))
+        self.assertEqual(error["message"], "Tally Error: Election tied between cand_ids [1, 2]")
 
 
     def test_tally_proportional(self):

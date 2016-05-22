@@ -9,12 +9,11 @@ from eLect import models
 from eLect.models import ElectionType
 from eLect.database import Base, engine, session
 
-# NOTE: all hybrid methods must be represented in the ElectionType model as well
 
 class WinnerTakeAll(ElectionType):
     """ Winner-Take-All elections class """
     def __init__(self):
-        super().__init__()
+        # super().__init__()
         # self.id = 1
         self.title = "Winner-Take-All"
         self.description_short = "Voter may choose only one of all the candidates, and only one winner may be declared." 
@@ -33,7 +32,7 @@ class WinnerTakeAll(ElectionType):
                 models.Vote.candidate.has(race_id = race_id)).group_by(
                 models.Vote.candidate_id).all()
         except Exception as e:
-            # Get rid of print and find better way to Except
+            # TODO: Get rid of print and find better way to Except
             print("Error: {}".format(e))
             return None
 
@@ -60,7 +59,7 @@ class WinnerTakeAll(ElectionType):
             raise Exception("No winners found")
         if len(results) > 1:
             raise Exception("Election tied between cand_ids {}".format(
-                list(highscore_winners.keys())))
+                list(results.keys())))
         
 
 
