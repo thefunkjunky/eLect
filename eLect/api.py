@@ -329,10 +329,16 @@ def get_tally(race_id, elect_id=None):
         return Response(data, 404, mimetype="application/json")
 
     # Init tally object
-    results = elect_type.tally_race(race_id)
+    try:
+        results = elect_type.tally_race(race_id)
+        elect_type.check_results(results)
+    except Exception as e:
+        message = "Tally Error: {}".format(e)
+        data = json.dumps({"message": message})
+        return Response(data, 400, mimetype="application/json")
 
 
-    data = json.dumps(race.as_dictionary())
+    data = json.dumps(results)
     return Response(data, 200, mimetype="application/json")
 
 ############################
