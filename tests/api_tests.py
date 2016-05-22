@@ -15,7 +15,7 @@ os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 from eLect.main import app
 from eLect import models
 from eLect.database import Base, engine, session
-from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze, init_tally_types, drop_tally_types
+from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 
 
@@ -29,12 +29,7 @@ class TestAPI(unittest.TestCase):
         # Set up the tables in the database
         Base.metadata.create_all(engine)
 
-        # Add election types
-        self.wta = WinnerTakeAll()
-        self.proportional = Proportional()
-        self.schulze = Schulze()
-        session.add_all([self.wta, self.proportional, self.schulze])
-        session.commit()
+
 
     def populate_database(self):
         self.userA = models.User(
@@ -109,11 +104,18 @@ class TestAPI(unittest.TestCase):
             self.candidateBB])
         session.commit()
 
+        # Add election types
+        self.wta = WinnerTakeAll()
+        self.proportional = Proportional()
+        self.schulze = Schulze()
+        session.add_all([self.wta, self.proportional, self.schulze])
+        session.commit()
+
 
 
     def test_get_empty_datasets(self):
         """ Getting elections, races, etc from an empty database """
-        endpoints = ["elections", "races", "candidates", "votes"]
+        endpoints = ["elections", "races", "candidates", "votes", "types"]
         for endpoint in endpoints:
             response = self.client.get("/api/{}".format(endpoint),
                 headers=[("Accept", "application/json")])
@@ -232,6 +234,34 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(highscore_winners[1], 2)
         self.assertEqual(winners[0].id, 1)
 
+    def test_tally_WTA_tied(self):
+        self.populate_database()
+
+        self.voteA1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userA.id)
+        self.voteA2 = models.Vote(
+            value = 0,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userB.id)
+        self.voteA3 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAB.id,
+            user_id = self.userC.id)
+
+        session.add_all([
+            self.voteA1,
+            self.voteA2,
+            self.voteA3])
+        session.commit()
+
+        highscore_winners = self.wta.tally_race(self.raceA.id)
+        # How to use assertRaises correctly?
+        with self.assertRaises(Exception):
+            self.wta.check_results(highscore_winners)
+
+
     def test_tally_proportional(self):
         self.populate_database()
 
@@ -248,7 +278,6 @@ class TestAPI(unittest.TestCase):
             candidate_id = self.candidateAB.id,
             user_id = self.userC.id)
 
-
         session.add_all([
             self.voteA1,
             self.voteA2,
@@ -258,7 +287,8 @@ class TestAPI(unittest.TestCase):
         results = self.proportional.tally_race(self.raceA.id)
         print("results {}".format(results))
 
-        self.assertEqual(1,0)
+        self.assertEqual(results[1], 2/3)
+        self.assertEqual(results[2], 1/3)
 
 
     def tearDown(self):

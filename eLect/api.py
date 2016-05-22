@@ -9,15 +9,31 @@ from . import models
 from . import decorators
 from eLect.main import app
 from .database import session
-from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze, init_tally_types, drop_tally_types
+from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 # schemas for schema validation go here...
 
 
 ### Init election types 
 # Where should this go?  This seems like a bad place
-drop_tally_types()
-init_tally_types()
+def drop_tally_types():
+    try:
+        num_rows_deleted = session.query(
+            models.ElectionType).delete()
+        session.commit()
+    except Exception as e:
+        session.rollback()
+
+def init_tally_types():
+    try:
+        wta = WinnerTakeAll()
+        proportional = Proportional()
+        schulze = Schulze()
+        session.add_all([wta, proportional, schulze])
+        session.commit()
+    except Exception as e:
+        session.rollback()
+
 
 
 # Putting repetitive session query validations here...
@@ -284,10 +300,10 @@ def type_get(type_id):
     data = json.dumps(elect_type.as_dictionary())
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally/<int:type_id>", methods=["GET"])
-@app.route("/api/races/<int:race_id>/tally/<int:type_id>", methods=["GET"])
+@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally/", methods=["GET"])
+@app.route("/api/races/<int:race_id>/tally/", methods=["GET"])
 @decorators.accept("application/json")
-def get_tally(race_id, tally_id, elect_id=None):
+def get_tally(race_id, elect_id=None):
     """ Tallies results for race [race_id] """
     # Check for election's existence, if elect_id is included
     if elect_id:
@@ -302,7 +318,10 @@ def get_tally(race_id, tally_id, elect_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    # Finds type with tally_id
+    # Finds race type_id
+    type_id = race.query(Race.election_type)
+
+    # Finds type with type_id
     elect_type = session.query(models.ElectionType).get(type_id)
     if not elect_type:
         message = "Could not find election type with id {}".format(race_id)

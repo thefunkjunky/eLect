@@ -26,11 +26,16 @@ class WinnerTakeAll(ElectionType):
         """ Tallies the votes for a race. Returns a dict of cand.ids:score """
 
         # # The easy-to-read way of doing this
-        results = session.query(
-            func.sum(models.Vote.value)).add_column(
-            models.Vote.candidate_id).filter(
-            models.Vote.candidate.has(race_id = race_id)).group_by(
-            models.Vote.candidate_id).all()
+        try:
+            results = session.query(
+                func.sum(models.Vote.value)).add_column(
+                models.Vote.candidate_id).filter(
+                models.Vote.candidate.has(race_id = race_id)).group_by(
+                models.Vote.candidate_id).all()
+        except Exception as e:
+            # Get rid of print and find better way to Except
+            print("Error: {}".format(e))
+            return None
 
         # # The supposedly faster way of doing this
         # results = session.query(
@@ -47,10 +52,13 @@ class WinnerTakeAll(ElectionType):
 
     @hybrid_method
     def check_results(self, highscore_winners):
+        """ Checks the results returned by the WTA tally_race() method """
+        # Do I need custom Exceptions here?
+        if len(highscore_winners) < 1:
+            raise Exception("No winners found")
         if len(highscore_winners) > 1:
-            raise Exception("Error: Election tied between") 
-
-
+            raise Exception("Election tied between cand_ids {}".format(
+                list(highscore_winners.keys())))
 
 
 class Proportional(ElectionType):
@@ -103,20 +111,3 @@ class Schulze(ElectionType):
         """ Tallies the votes for a race """
         race = session.query("models.Race").get(race_id)
 
-def init_tally_types():
-    try:
-        wta = WinnerTakeAll()
-        proportional = Proportional()
-        schulze = Schulze()
-        session.add_all([wta, proportional, schulze])
-        session.commit()
-    except Exception as e:
-        session.rollback()
-
-def drop_tally_types():
-    try:
-        num_rows_deleted = session.query(
-            models.ElectionType).delete()
-        session.commit()
-    except Exception as e:
-        session.rollback()
