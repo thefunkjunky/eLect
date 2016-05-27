@@ -43,7 +43,7 @@ race_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
-        "election_id": {"type": "string"},
+        "election_id": {"type": "number"},
         "election_type": {"type": "number"}
     },
     "required": ["title", "election_id"]
@@ -486,8 +486,8 @@ def race_post():
     check_election_id(data["election_id"])
 
     # Check if race title already exists in election
-    election = session.query(models.Elections).filter(
-        models.Election.title == data["title"]).first()
+    election = session.query(models.Election).get(
+        data["election_id"])
     for race in election.races:
         if race.title == data["title"]:
                 message = "Race with title {} already exists in election with id #{}.".format(
@@ -495,12 +495,23 @@ def race_post():
                 data = json.dumps({"message": message})
                 return Response(data, 403, mimetype="application/json")
 
+    optional_keys_defaults = {
+    "description_short": "", 
+    "description_long": "",
+    "election_type": election.default_election_type}
+
+    for key,value in optional_keys_defaults.items():
+        try:
+            test = data["{}".format(key)]
+        except KeyError:
+            data["{}".format(key)] = value
+
     # Add the race to the database
     race = models.Race(
         title = data["title"],
         description_short = data["description_short"],
         description_long = data["description_long"],
-        end_date = data["end_date"],
+        # end_date = data["end_date"],
         election_id = data["election_id"],
         election_type = data["election_type"],
         )

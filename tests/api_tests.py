@@ -233,6 +233,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(user.name, "Francis")
 
     def test_POST_election(self):
+        """Test POST method for election"""
         self.init_elect_types()
         userA = models.User(
             name = "UserA",
@@ -266,6 +267,49 @@ class TestAPI(unittest.TestCase):
 
         election = elections[0]
         self.assertEqual(election.title, "Election A")
+
+    def test_POST_race(self):
+        """Test POST method for Race"""
+        self.init_elect_types()
+        userA = models.User(
+            name = "UserA",
+            email = "userA@eLect.com",
+            password = "asdf")
+        session.add(userA)
+        session.commit()
+
+        electionA = models.Election(
+            title = "Election A",
+            admin_id = userA.id,
+            )
+        session.add(electionA)
+        session.commit()
+
+        data = {
+        "title": "Race A",
+        "election_id": electionA.id
+        }
+
+        response = self.client.post("/api/races",
+            data=json.dumps(data),
+            content_type="application/json",
+            headers=[("Accept", "application/json")]
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(urlparse(response.headers.get("Location")).path,
+            "/api/races/1")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["id"], 1)
+        self.assertEqual(data["title"], "Race A")
+
+        races = session.query(models.Race).all()
+        self.assertEqual(len(races), 1)
+
+        race = races[0]
+        self.assertEqual(race.title, "Race A")
 
     def test_tally_no_races(self):
         """Test for NoRaces exception to be raised by check_race()"""
