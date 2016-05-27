@@ -28,7 +28,6 @@ class TestAPI(unittest.TestCase):
         """ Test setup """
         self.client = app.test_client()
 
-
         # Set up the tables in the database
         Base.metadata.create_all(engine)
         
@@ -113,6 +112,16 @@ class TestAPI(unittest.TestCase):
         session.add_all([self.wta, self.proportional, self.schulze])
         session.commit()
 
+    def test_unsupported_accept_header(self):
+        response = self.client.get("/api/elections",
+            headers=[("Accept", "application/xml")]
+            )
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.mimetype, "application/json")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["message"],
+            "Request must accept application/json data")
 
     def test_get_empty_datasets(self):
         """ Getting elections, races, etc from an empty database """
@@ -193,6 +202,138 @@ class TestAPI(unittest.TestCase):
 
         data = json.loads(response.data.decode("ascii"))
         self.assertEqual(data["message"], "Could not find election with id 1")
+
+    def test_post_user(self):
+        """Test POST method for Users"""
+        data = {
+        "name": "Francis",
+        "email": "francis@francis.com",
+        "password": "asdf"
+        }
+
+        response = self.client.post("/api/users",
+              data=json.dumps(data),
+              content_type="application/json",
+              headers=[("Accept", "application/json")]
+            )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(urlparse(response.headers.get("Location")).path,
+            "/api/elections")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["id"], 1)
+        self.assertEqual(data["name"], "Francis")
+
+        users = session.query(models.User).all()
+        self.assertEqual(len(users), 1)
+
+        user = users[0]
+        self.assertEqual(user.name, "Francis")
+
+    def test_POST_election(self):
+        self.init_elect_types()
+        userA = models.User(
+            name = "UserA",
+            email = "userA@eLect.com",
+            password = "asdf")
+        session.add(userA)
+        session.commit()
+
+        data = {
+        "title": "Election A",
+        "admin_id": userA.id
+        }
+
+        response = self.client.post("/api/elections",
+              data=json.dumps(data),
+              content_type="application/json",
+              headers=[("Accept", "application/json")]
+          )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.mimetype, "application/json")
+        self.assertEqual(urlparse(response.headers.get("Location")).path,
+            "/api/elections/1")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["id"], 1)
+        self.assertEqual(data["title"], "Election A")
+
+        elections = session.query(models.Election).all()
+        self.assertEqual(len(elections), 1)
+
+        election = elections[0]
+        self.assertEqual(election.title, "Election A")
+
+    def test_tally_no_races(self):
+        """Test for NoRaces exception to be raised by check_race()"""
+        self.init_elect_types()
+
+        userA = models.User(
+            name = "UserA",
+            email = "userA@eLect.com",
+            password = "asdf")
+
+        session.add(userA)
+        session.commit()
+
+        electionA = models.Election(
+            title = "Election A",
+            admin_id = userA.id,
+            default_election_type = 1
+            )
+
+        session.add(electionA)
+        session.commit()
+
+        with self.assertRaises(NoRaces):
+            self.wta.check_race(1)
+
+        with self.assertRaises(NoRaces):
+            self.proportional.check_race(1)
+
+        with self.assertRaises(NoRaces):
+            self.schulze.check_race(1)
+
+    def test_tally_no_candidates(self):
+        """Test for NoCandidates exception to be raised by check_race()"""
+        self.init_elect_types()
+
+        userA = models.User(
+            name = "UserA",
+            email = "userA@eLect.com",
+            password = "asdf")
+
+        session.add(userA)
+        session.commit()
+
+        electionA = models.Election(
+            title = "Election A",
+            admin_id = userA.id,
+            default_election_type = 1
+            )
+
+        session.add(electionA)
+        session.commit()
+
+        raceA = models.Race(
+            title = "Race A",
+            election_id = electionA.id
+            )
+
+        session.add(raceA)
+        session.commit()
+
+        with self.assertRaises(NoCandidates):
+            self.wta.check_race(raceA.id)
+
+        with self.assertRaises(NoCandidates):
+            self.proportional.check_race(raceA.id)
+
+        with self.assertRaises(NoCandidates):
+            self.schulze.check_race(raceA.id)
 
     def test_tally_no_votes(self):
         """Test for NoVotes exception to be raised by check_race()"""

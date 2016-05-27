@@ -17,7 +17,6 @@ class WinnerTakeAll(ElectionType):
     """ Winner-Take-All elections class """
     def __init__(self):
         # super().__init__()
-        # self.id = 1
         self.title = "Winner-Take-All"
         self.description_short = "Voter may select one candidate,"\
         " and one winner is declared based upon a simple majority."
@@ -79,7 +78,6 @@ class Proportional(ElectionType):
     """ Proportional elections class. Returns a dict of cand.ids:score"""
     def __init__(self):
         # super(Proportional, self).__init__()
-        # self.id = 2
         self.title = "Proportional"
         self.description_short = "Voter may choose one candidate, "\
         "and all candidates are tallied proportinally to each other as "\
@@ -108,12 +106,19 @@ class Proportional(ElectionType):
 
         return calculated_results
 
+    @hybrid_method
+    def check_results(self, results):
+        """ Checks the results returned by the WTA tally_race() method """
+        if not results:
+            raise NoResults("No results found")
+        if len(results) < 1:
+            raise NoWinners("No winners found")
+
 
 class Schulze(ElectionType):
     """ Schulze elections class """
     def __init__(self):
         # super(Schulze, self).__init__()
-        # self.id = 3
         self.title = "Schulze (Condorcet)"
         self.description_short = "Voter may rank ALL candidates in relation to each other." 
         self.description_long = "Offers voters the most power for their vote. "\

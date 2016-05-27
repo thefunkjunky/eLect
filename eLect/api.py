@@ -1,6 +1,7 @@
 import os.path
 from datetime import datetime
 import json
+import re
 
 from flask import request, Response, url_for, send_from_directory
 from jsonschema import validate, ValidationError
@@ -146,15 +147,15 @@ def elections_get():
     data = json.dumps([election.as_dictionary() for election in elections])
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:id>", methods=["GET"])
+@app.route("/api/elections/<int:elect_id>", methods=["GET"])
 @decorators.accept("application/json")
-def election_get(id):
+def election_get(elect_id):
     """ Returns a single election """
-    election = session.query(models.Election).get(id)
+    election = session.query(models.Election).get(elect_id)
 
     # Check for election's existence
     if not election:
-        message = "Could not find election with id {}".format(id)
+        message = "Could not find election with id {}".format(elect_id)
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
@@ -434,6 +435,19 @@ def election_post():
     #             election.title, election.id)
     #         data = json.dumps({"message": message})
     #         return Response(data, 403, mimetype="application/json")
+
+    # Populate defaults if no data given for optional keys
+    optional_keys_defaults = {
+    "description_short": "", 
+    "description_long": "",
+    "elect_open": True,
+    "default_election_type": 1}
+
+    for key,value in optional_keys_defaults.items():
+        try:
+            test = data["{}".format(key)]
+        except KeyError:
+            data["{}".format(key)] = value
 
     # Add the election to the database
     election = models.Election(
