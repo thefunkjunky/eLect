@@ -2,27 +2,29 @@ import os.path
 import datetime
 
 from flask import url_for
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Sequence, ForeignKey
+from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.sql import func
 
 
-from .database import Base, engine
+from eLect.main import NoRaces, NoCandidates, ClosedElection, NoVotes, NoWinners,TiedResults, NoResults, OpenElection
+# from .utils import num_votes_cast
+from .database import Base, engine, session
 
 class User(Base):
     """ User class scheme """
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
-    name = Column(String(128))
-    email = Column(String(128), unique = True)
-    password = Column(String(10084))
-    
+    name = Column(Text)
+    email = Column(Text, unique = True)
+    password = Column(Text)
+
     # Foreign relationships
     # registered_elections = relationship("Election", backref="user")
     administered_elections = relationship("Election", backref="admin")
     votes = relationship("Vote", backref="user")
     # groups = relationship("Group", backref="user")
-
 
     def as_dictionary(self):
         user = {
@@ -43,9 +45,9 @@ class Election(Base):
     """ Election class scheme """
     __tablename__ = "election"
     id = Column(Integer, primary_key=True)
-    title = Column(String(128), nullable=False)
-    description_short = Column(String(1000))
-    description_long = Column(String(60000))
+    title = Column(Text, nullable=False)
+    description_short = Column(Text)
+    description_long = Column(Text)
     ## datetime not json serializable.  need to fix
     # start_date = Column(DateTime, default=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
@@ -53,7 +55,7 @@ class Election(Base):
     elect_open = Column(Boolean, default=False) #look into types.Boolean() create_constraint
 
     # Foreign relationships
-    default_election_type = Column(Integer, ForeignKey('elect_type.id'), nullable=False)
+    default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
     races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -78,9 +80,9 @@ class Race(Base):
     """ Race class scheme """
     __tablename__ = "race"
     id = Column(Integer, primary_key=True)
-    title = Column(String(128), nullable=False)
-    description_short = Column(String(1000))
-    description_long = Column(String(60000))
+    title = Column(Text, nullable=False)
+    description_short = Column(Text)
+    description_long = Column(Text)
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
@@ -103,9 +105,9 @@ class Candidate(Base):
     """ Candidate class scheme """
     __tablename__ = "candidate"
     id = Column(Integer, primary_key=True)
-    title = Column(String(128), nullable=False)
-    description_short = Column(String(1000))
-    description_long = Column(String(60000))
+    title = Column(Text, nullable=False)
+    description_short = Column(Text)
+    description_long = Column(Text)
 
     # Foreign relationships
     race_id = Column(Integer, ForeignKey('race.id'), nullable=False)
@@ -146,9 +148,9 @@ class ElectionType(Base):
     """ Election Type class scheme """
     __tablename__ = "elect_type"
     id = Column(Integer, primary_key=True)
-    title = Column(String(128), nullable=False)
-    description_short = Column(String(1000))
-    description_long = Column(String(60000))
+    title = Column(Text, nullable=False)
+    description_short = Column(Text)
+    description_long = Column(Text)
 
 
     def as_dictionary(self):
@@ -160,6 +162,27 @@ class ElectionType(Base):
         }
         return elect_type
 
+    @hybrid_method
+    def check_race(self, race_id):
+        """Checks race conditions before attempting to tally votes. 
+        Failed test returns Exception"""
+        race = session.query(Race).get(race_id)
+        # Fix this query to simply return the count #, not a list of tuples
+        num_votes_cast = session.query(
+            func.count(Vote.id)).filter(
+            Vote.candidate.has(race_id = race_id)).all()[0][0]
+        if not race:
+            raise NoRaces("No race with id {}".format(race_id))
+        elif not race.candidates:
+            raise NoCandidates("No candidates found for race id {}".format(race_id))
+        elif race.election.elect_open == True:
+            raise OpenElection("Race id {} in Election {} is still open.".format(
+                race_id, race.election_id))
+        elif num_votes_cast == 0:
+            raise NoVotes("No Votes cast in Race id {}".format(race_id))
+        
+
+
     # NOTE: be sure that all ElectionType hybrid methods are represented here
     # @hybrid_method
     # def tally_race(self, race_id):
@@ -168,25 +191,3 @@ class ElectionType(Base):
     # @hybrid_method
     # def check_results(self, results):
     #     pass
-
-
-
-
-
-
-
-
-# class File(Base):
-#     """ File class scheme """
-#     __tablename__ = "file"
-#     id = Column(Integer, primary_key=True)
-#     filename = Column(String(128), nullable=False)
-
-#     def as_dictionary(self):
-#         file = {
-#             "id": self.id,
-#             "filename": self.filename,
-#             "path": url_for("file", filename=self.filename)
-#         }
-#         return file
-

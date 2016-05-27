@@ -9,24 +9,80 @@ from . import models
 from . import decorators
 from eLect.main import app
 from .database import session
+from eLect.utils import get_or_create
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 # schemas for schema validation go here...
 
+user_schema = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"type": "string"},
+        "password": {"type": "string"}
+    },
+    "required": ["name", "email", "password"]
+}
+election_schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "elect_open": {"type": "boolean"},
+        "default_election_type": {"type": "number"},
+        "admin_id": {"type": "number"}
+    },
+    "required": ["title", 
+        "admin_id"]
+}
+race_schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "election_id": {"type": "string"},
+        "election_type": {"type": "number"}
+    },
+    "required": ["title", "election_id"]
+}
+candidate_schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "race_id": {"type": "number"},
+    },
+    "required": ["title", "race_id"]
+}
+vote_schema = {
+    "type": "object",
+    "properties": {
+        "value": {"type": "number"},
+        "candidate_id": {"type": "number"},
+        "user_id": {"type": "number"},
+    },
+    "required": ["value", "candidate_id", "user_id"]
+}
 
-### Init election types 
+
+## Init election types 
 # Where should this go?  This seems like a bad place
 def drop_tally_types():
     try:
         num_rows_deleted = session.query(
             models.ElectionType).delete()
         session.commit()
+        return num_rows_deleted
     except Exception as e:
         session.rollback()
 
 def init_tally_types():
     try:
-        wta = WinnerTakeAll()
+        # BILL: What is this doing, or supposed to do?
+        wta = WinnerTakeAll.fetch()
         proportional = Proportional()
         schulze = Schulze()
         session.add_all([wta, proportional, schulze])
@@ -46,8 +102,6 @@ def assign_election_type(type_id):
     if type_id == 3:
         elect_type = Schulze()
         return elect_type
-
-
 
 # Putting repetitive session query validations here...
 def check_election_id(elect_id):
@@ -364,28 +418,29 @@ def election_post():
     """ Add new election """
     data = request.json
 
-    # # Validate submitted header data, as json, against post_schema
-    # try:
-    #     validate(data, post_schema)
-    # except ValidationError as error:
-    #     data = {"message": error.message}
-    #     return Response(json.dumps(data), 422, mimetype="application/json")
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, election_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
 
-    # Check if Election title already exists
-    duplicate_election = session.query(models.Election).filter(
-        models.Election.title == data["title"])
-    if duplicate_election:
-            message = "Election with title {} already exists, id #{}.".format(
-                election.title, election.id)
-            data = json.dumps({"message": message})
-            return Response(data, 403, mimetype="application/json")
+    # # Check if Election title already exists
+    # # NOTE: Duplicate titles should probably be allowed
+    # duplicate_election = session.query(models.Election).filter(
+    #     models.Election.title == data["title"])
+    # if duplicate_election:
+    #         message = "Election with title {} already exists, id #{}.".format(
+    #             election.title, election.id)
+    #         data = json.dumps({"message": message})
+    #         return Response(data, 403, mimetype="application/json")
 
     # Add the election to the database
     election = models.Election(
         title = data["title"],
         description_short = data["description_short"],
         description_long = data["description_long"],
-        end_date = data["end_date"],
+        # end_date = data["end_date"],
         elect_open = data["elect_open"],
         default_election_type = data["default_election_type"],
         admin_id = data["admin_id"]
@@ -407,13 +462,18 @@ def race_post():
     data = request.json
 
     # Validate header data vs. schema
+    try:
+        validate(data, race_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
 
     # Check if election exists
     check_election_id(data["election_id"])
 
     # Check if race title already exists in election
     election = session.query(models.Elections).filter(
-        models.Election.title == data["title"])
+        models.Election.title == data["title"]).first()
     for race in election.races:
         if race.title == data["title"]:
                 message = "Race with title {} already exists in election with id #{}.".format(
@@ -447,13 +507,18 @@ def candidate_post():
     data = request.json
 
     # Validate header data vs. schema
+    try:
+        validate(data, candidate_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
 
     # Check if race exists
     check_race_id(data["race_id"])
 
     # Check if candidate title already exists in race
     race = session.query(models.Race).filter(
-        models.Race.id == data["race_id"])
+        models.Race.id == data["race_id"]).first()
     for candidate in race.candidates:
         if candidate.title == data["title"]:
             message = "Candidate with title {} already exists in race id #{}.".format(
@@ -485,13 +550,18 @@ def vote_post():
     data = request.json
 
     # Validate header data vs. schema
+    try:
+        validate(data, vote_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
 
     # Check if candidate exists
-    check_cand_id(data["cand_id"])
+    check_cand_id(data["candidate_id"])
+    candidate = session.query(models.Candidate).filter(
+        models.Candidate.id == data["candidate_id"]).first()
 
     # Check if election is still currently open
-    candidate = session.query(models.Candidate).filter(
-        models.Candidate.id == data["candidate_id"])
     if not candidate.race.election.elect_open:
         message = "Election with id {} is currently closed, and not accepting new votes.".format(
             candidate.race.election.id)
@@ -531,9 +601,16 @@ def user_post():
     """ Add new user """
     data = request.json
 
+    # Validate request JSON data vs schema
+    try:
+        validate(data, user_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
     # Check if user already exists
     duplicate_user = session.query(models.User).filter(
-        models.User.email == data["email"])
+        models.User.email == data["email"]).first()
     if duplicate_user:
             message = "User with email {} already exists.".format(
                 duplicate_user.id)
@@ -549,8 +626,8 @@ def user_post():
     session.add(user)
     session.commit()
 
-    # Return a 201 Created, containing the election as JSON and with the 
-    # Location header set to the location of the election
+    # Return a 201 Created, 
     data = json.dumps(user.as_dictionary())
+    # Update this to send them back to previous page before 
     headers = {"Location": url_for("elections_get")}
     return Response(data, 201, headers=headers, mimetype="application/json")

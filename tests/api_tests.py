@@ -13,7 +13,9 @@ import sys
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
 from eLect.main import app
+from eLect.main import NoRaces, NoCandidates, ClosedElection, NoVotes, NoWinners,TiedResults, NoResults, OpenElection
 from eLect import models
+from eLect.utils import num_votes_cast
 from eLect.database import Base, engine, session
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
@@ -26,12 +28,22 @@ class TestAPI(unittest.TestCase):
         """ Test setup """
         self.client = app.test_client()
 
+
         # Set up the tables in the database
         Base.metadata.create_all(engine)
+        
+    def init_elect_types(self):
+        """Set up ElectionType Objects"""
+        self.wta = WinnerTakeAll()
+        self.proportional = Proportional()
+        self.schulze = Schulze()
+
+        session.add_all([self.wta, self.proportional, self.schulze])
 
 
+    def populate_database(self, election_type=1):
+        self.init_elect_types()
 
-    def populate_database(self):
         self.userA = models.User(
             name = "UserA",
             email = "userA@eLect.com",
@@ -41,35 +53,25 @@ class TestAPI(unittest.TestCase):
             email = "userB@eLect.com",
             password = "asdf")
         self.userC = models.User(
-                    name = "UserC",
-                    email = "userC@eLect.com",
-                    password = "asdf")
+            name = "UserC",
+            email = "userC@eLect.com",
+            password = "asdf")
 
-        session.add_all([self.userA,self.userB, self.userC])
-        session.commit()
-
-        self.typeA = models.ElectionType(
-            title = "Election type A"
-            )
-        self.typeB = models.ElectionType(
-            title = "Election type B"
-            )
-
-        session.add_all([self.typeA,self.typeB])
+        session.add_all([self.userA, self.userB, self.userC])
         session.commit()
 
         self.electionA = models.Election(
             title = "Election A",
-            default_election_type = self.typeA.id,
-            admin_id = self.userA.id
+            admin_id = self.userA.id,
+            default_election_type = election_type
             )
         self.electionB = models.Election(
             title = "Election B",
-            default_election_type = self.typeB.id,
-            admin_id = self.userB.id
+            admin_id = self.userB.id,
+            default_election_type = election_type
             )
 
-        session.add_all([self.electionA,self.electionB])
+        session.add_all([self.electionA, self.electionB])
         session.commit()
 
         self.raceA = models.Race(
@@ -110,7 +112,6 @@ class TestAPI(unittest.TestCase):
         self.schulze = Schulze()
         session.add_all([self.wta, self.proportional, self.schulze])
         session.commit()
-
 
 
     def test_get_empty_datasets(self):
@@ -193,7 +194,72 @@ class TestAPI(unittest.TestCase):
         data = json.loads(response.data.decode("ascii"))
         self.assertEqual(data["message"], "Could not find election with id 1")
 
+    def test_tally_no_votes(self):
+        """Test for NoVotes exception to be raised by check_race()"""
+        self.populate_database()
+        with self.assertRaises(NoVotes):
+            self.wta.check_race(self.raceA.id)
+
+        with self.assertRaises(NoVotes):
+            self.proportional.check_race(self.raceA.id)
+
+        with self.assertRaises(NoVotes):
+            self.schulze.check_race(self.raceA.id)
+
+    def test_closed_election(self):
+        """Test open/closed election conditions"""
+        self.populate_database()
+        self.voteA1 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userA.id)
+        self.voteA2 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAA.id,
+            user_id = self.userB.id)
+        self.voteA3 = models.Vote(
+            value = 1,
+            candidate_id = self.candidateAB.id,
+            user_id = self.userC.id)
+        self.electionA.elect_open = True
+        session.add_all([
+            self.voteA1,
+            self.voteA2,
+            self.voteA3])
+        session.commit()
+
+        with self.assertRaises(OpenElection):
+            self.wta.check_race(self.raceA.id)
+        with self.assertRaises(OpenElection):
+            self.proportional.check_race(self.raceA.id)
+        with self.assertRaises(OpenElection):
+            self.schulze.check_race(self.raceA.id)
+
+        self.electionA.elect_open = False
+
+        highscore_winners = self.wta.tally_race(self.raceA.id)
+        self.assertEqual(highscore_winners, {1:2})
+
+        data = {
+        "candidate_id": self.candidateAA.id,
+        "user_id": 1,
+        "value": 1 
+        }
+
+        candidate = session.query(models.Candidate).get(1)
+        elect_id = candidate.race.election.id
+        response = self.client.post("/api/votes",
+            data=json.dumps(data),
+            content_type="application/json",
+            headers=[("Accept", "application/json")])
+        response_json = json.loads(response.data.decode("ascii"))
+        self.assertEqual(response_json["message"],
+         "Election with id {} is currently closed, and not accepting new votes.".format(
+            elect_id))
+
+
     def test_tally_WTA(self):
+        """Test standard Winner-Take-All tallying"""
         self.populate_database()
 
         self.voteA1 = models.Vote(
@@ -226,6 +292,8 @@ class TestAPI(unittest.TestCase):
             self.voteB2])
         session.commit()
 
+        votes_cast = num_votes_cast(self.raceA.id)
+        self.assertEqual(votes_cast, 3)
         highscore_winners = self.wta.tally_race(self.raceA.id)
         winner_ids = list(highscore_winners.keys())
         winners = session.query(models.Candidate).filter(
@@ -254,6 +322,7 @@ class TestAPI(unittest.TestCase):
 
 
     def test_tally_WTA_tied(self):
+        """Tests tallying of tied race"""
         self.populate_database()
 
         self.voteA1 = models.Vote(
@@ -276,9 +345,8 @@ class TestAPI(unittest.TestCase):
         session.commit()
 
         highscore_winners = self.wta.tally_race(self.raceA.id)
-        # How to use assertRaises correctly?
-        # I want to make this more specific
-        with self.assertRaises(Exception):
+        # How to use assertRaises correctly:
+        with self.assertRaises(TiedResults):
             self.wta.check_results(highscore_winners)
 
         response = self.client.get("/api/races/{}/tally".format(self.raceA.id),
@@ -297,7 +365,8 @@ class TestAPI(unittest.TestCase):
 
 
     def test_tally_proportional(self):
-        self.populate_database()
+        """Test standard Proportional tallying"""
+        self.populate_database(2)
 
         self.voteA1 = models.Vote(
             value = 1,
@@ -319,7 +388,6 @@ class TestAPI(unittest.TestCase):
         session.commit()
 
         results = self.proportional.tally_race(self.raceA.id)
-        print("results {}".format(results))
 
         self.assertEqual(results[1], 2/3)
         self.assertEqual(results[2], 1/3)
