@@ -513,7 +513,7 @@ def race_post():
 
     for key,value in optional_keys_defaults.items():
         try:
-            test = data["{}".format(key)]
+            data["{}".format(key)]
         except KeyError:
             data["{}".format(key)] = value
 
@@ -523,7 +523,7 @@ def race_post():
         description_short = data["description_short"],
         description_long = data["description_long"],
         # end_date = data["end_date"],
-        election_id = data["election_id"],
+        election = election,
         election_type = data["election_type"],
         race_open = data["race_open"],
         )

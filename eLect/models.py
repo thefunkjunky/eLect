@@ -40,9 +40,7 @@ class Election(Base):
     # Foreign relationships
     default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
     # races = relationship("Race", backref=backref("election", lazy="joined"), cascade="all, delete-orphan")
-    # Using back_populates here and in child race table
-    # to create a bidirectional relationship, as a one-to-many from parent to child,
-    # and a many-to-one relationship from the children to the parent
+    races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # races = relationship("Race", back_populates="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -87,8 +85,8 @@ class Race(Base):
     race_open = Column(Boolean, default=True)
 
     # Foreign relationships
-    election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    election = relationship("Election", backref="races")
+    election_id = Column(Integer, ForeignKey('election.id'))
+    # election = relationship("Election", backref="races")
     ### DESPERATELY NEEDED:
     # Figure out how to set election_type default to parent 
     # election.default_election_type when instances are created,
@@ -99,8 +97,15 @@ class Race(Base):
     # election_type = election.default_election_type
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
+
     # def __init__(self, *args, **kwargs):
-    #     self.election_type = election.default_election_type
+    #     print("*args: ", *args)
+    #     print("**kwargs: ", **kwargs)
+    #     if election:
+    #         self.election = election
+    #     elif election_id:
+    #         election = session.query(Election).get(election_id)
+    #         self.election_type = election.default_election_type
 
     def as_dictionary(self):
         race = {
