@@ -370,7 +370,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(candidate.title, "Candidate A")
 
     def test_POST_vote(self):
-        """Test POST method for Vote"""
+        """Test POST method for Vote, and checks for already voted error"""
         self.init_elect_types()
         userA = models.User(
             name = "UserA",
@@ -428,6 +428,34 @@ class TestAPI(unittest.TestCase):
         vote = votes[0]
         self.assertEqual(vote.user_id, userA.id)
 
+        # Try POST same vote again to test for already voted error
+        vote_count = session.query(models.Vote).filter(
+        models.Vote.user_id == userA.id,
+        models.Vote.candidate_id == candidateA.id).count()
+        self.assertEqual(vote_count, 1)
+        
+        data = {
+        "value": 1,
+        "user_id": userA.id,
+        "candidate_id": candidateA.id
+        }
+
+        response = self.client.post("/api/votes",
+            data=json.dumps(data),
+            content_type="application/json",
+            headers=[("Accept", "application/json")]
+        )
+
+        data = json.loads(response.data.decode("ascii"))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.mimetype, "application/json")
+
+        data = json.loads(response.data.decode("ascii"))
+        self.assertEqual(data["message"],
+        "User with id {} has already voted for candidate with id {}.".format(
+            userA.id, candidateA.id))
+
     def test_invalid_header_data(self):
         """Tests invalid JSON schema for POST/PUT endpoints"""
         elect_data = {
@@ -468,7 +496,6 @@ class TestAPI(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 422)
             self.assertEqual(response.mimetype, "application/json")
-
 
     def test_tally_no_races(self):
         """Test for NoRaces exception to be raised by check_race()"""

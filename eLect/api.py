@@ -614,10 +614,10 @@ def vote_post():
         return Response(data, 403, mimetype="application/json")
 
     # Check if user already voted for this candidate
-    existing_vote = session.query(models.Vote).filter(
+    existing_votes = session.query(models.Vote).filter(
         models.Vote.user_id == data["user_id"],
         models.Vote.candidate_id == data["candidate_id"]).count()
-    if existing_vote > 0:
+    if existing_votes > 0:
         message = "User with id {} has already voted for candidate with id {}.".format(
             data["user_id"],
             data["candidate_id"])
