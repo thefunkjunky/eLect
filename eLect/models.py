@@ -52,7 +52,7 @@ class Election(Base):
     # start_date = Column(DateTime, default=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
     # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
-    elect_open = Column(Boolean, default=False) #look into types.Boolean() create_constraint
+    elect_open = Column(Boolean, default=True) #look into types.Boolean() create_constraint
 
     # Foreign relationships
     default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
@@ -99,7 +99,6 @@ class Race(Base):
         "election_type": self.election_type,
         }
         return race
-
 
 class Candidate(Base):
     """ Candidate class scheme """
@@ -180,8 +179,6 @@ class ElectionType(Base):
                 race_id, race.election_id))
         elif num_votes_cast == 0:
             raise NoVotes("No Votes cast in Race id {}".format(race_id))
-        
-
 
     # NOTE: be sure that all ElectionType hybrid methods are represented here
     # @hybrid_method

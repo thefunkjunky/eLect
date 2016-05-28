@@ -34,8 +34,7 @@ election_schema = {
         "default_election_type": {"type": "number"},
         "admin_id": {"type": "number"}
     },
-    "required": ["title", 
-        "admin_id"]
+    "required": ["title", "admin_id"]
 }
 race_schema = {
     "type": "object",
@@ -62,8 +61,8 @@ vote_schema = {
     "type": "object",
     "properties": {
         "value": {"type": "number"},
-        "candidate_id": {"type": "number"},
         "user_id": {"type": "number"},
+        "candidate_id": {"type": "number"},
     },
     "required": ["value", "candidate_id", "user_id"]
 }
@@ -494,7 +493,7 @@ def race_post():
                     race.title, election.id)
                 data = json.dumps({"message": message})
                 return Response(data, 403, mimetype="application/json")
-
+    # Populate defaults if no data given for optional keys
     optional_keys_defaults = {
     "description_short": "", 
     "description_long": "",
@@ -550,7 +549,18 @@ def candidate_post():
                 candidate.title, race.id)
             data = json.dumps({"message": message})
             return Response(data, 403, mimetype="application/json")
-    
+
+    # Populate defaults if no data given for optional keys
+    optional_keys_defaults = {
+    "description_short": "", 
+    "description_long": ""}
+
+    for key,value in optional_keys_defaults.items():
+        try:
+            test = data["{}".format(key)]
+        except KeyError:
+            data["{}".format(key)] = value
+
     # Add the candidate to the database
     candidate = models.Candidate(
         title = data["title"],
@@ -596,8 +606,8 @@ def vote_post():
     # Check if user already voted for this candidate
     existing_vote = session.query(models.Vote).filter(
         models.Vote.user_id == data["user_id"],
-        models.Vote.candidate_id == data["candidate_id"])
-    if existing_vote:
+        models.Vote.candidate_id == data["candidate_id"]).count()
+    if existing_vote > 0:
         message = "User with id {} has already voted for candidate with id {}.".format(
             data["user_id"],
             data["candidate_id"])
@@ -616,7 +626,7 @@ def vote_post():
     # Return a 201 Created, containing the vote as JSON and with the 
     # Location header set to the location of the candidate
     data = json.dumps(vote.as_dictionary())
-    headers = {"Location": url_for("races_get", race_id=candidate.race.id)}
+    headers = {"Location": url_for("election_get", elect_id=candidate.race.election.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
 
 @app.route("/api/users", methods=["POST"])
