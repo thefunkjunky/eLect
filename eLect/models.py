@@ -39,7 +39,7 @@ class Election(Base):
 
     # Foreign relationships
     default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
-    races = relationship("Race", backref=backref("election", lazy="joined"), cascade="all, delete-orphan")
+    # races = relationship("Race", backref=backref("election", lazy="joined"), cascade="all, delete-orphan")
     # Using back_populates here and in child race table
     # to create a bidirectional relationship, as a one-to-many from parent to child,
     # and a many-to-one relationship from the children to the parent
@@ -72,11 +72,10 @@ class Election(Base):
         "admin_id": self.admin_id,
         }
         return election
+    # This needs to go somewhere to get the mapper backrefs configured so I can use
+    # them in the child classes:
+    # configure_mappers()
 
-# This needs to go somewhere to get the mapper backrefs configured so I can use
-# them in the child classes:
-
-configure_mappers()
 
 class Race(Base):
     """ Race class scheme """
@@ -89,12 +88,19 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    # election = relationship("Election", backref="races")
-    election_type = Column(Integer, ForeignKey('elect_type.id'),
-        default=election.default_election_type)
-    # election_type = column_property(election.c.default_election_type)
+    election = relationship("Election", backref="races")
+    ### DESPERATELY NEEDED:
+    # Figure out how to set election_type default to parent 
+    # election.default_election_type when instances are created,
+    # but NOT attempting to do so when modules are being loaded 
+    # on import (before the instances can be created)
+    election_type = Column(Integer, ForeignKey('elect_type.id'))
+    # configure_mappers()
+    # election_type = election.default_election_type
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
+    # def __init__(self, *args, **kwargs):
+    #     self.election_type = election.default_election_type
 
     def as_dictionary(self):
         race = {
