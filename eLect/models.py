@@ -3,9 +3,9 @@ import datetime
 
 from flask import url_for
 from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates, column_property, backref, configure_mappers
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, select
 
 
 from eLect.main import (
@@ -22,34 +22,7 @@ from eLect.main import (
 # from .utils import num_votes_cast
 from .database import Base, engine, session
 
-class User(Base):
-    """ User class scheme """
-    __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    email = Column(Text, unique = True)
-    password = Column(Text)
 
-    # Foreign relationships
-    # registered_elections = relationship("Election", backref="user")
-    administered_elections = relationship("Election", backref="admin")
-    votes = relationship("Vote", backref="user")
-    # groups = relationship("Group", backref="user")
-
-    def as_dictionary(self):
-        user = {
-        "id": self.id,
-        "name": self.name,
-        "email": self.email,
-        "password": self.password
-
-        # "file": {
-        #     "id": self.file.id,
-        #     "filename": self.file.filename,
-        #     "path": url_for("uploaded_file", filename=self.file.filename)
-        #     }
-        }
-        return user
 
 class Election(Base):
     """ Election class scheme """
@@ -62,14 +35,29 @@ class Election(Base):
     # start_date = Column(DateTime, default=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
     # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
-    elect_open = Column(Boolean, default=True) #look into types.Boolean() create_constraint
+    elect_open = Column(Boolean, default=True)
 
     # Foreign relationships
     default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
-    races = relationship("Race", backref="election", cascade="all, delete-orphan")
+    races = relationship("Race", backref=backref("election", lazy="joined"), cascade="all, delete-orphan")
+    # Using back_populates here and in child race table
+    # to create a bidirectional relationship, as a one-to-many from parent to child,
+    # and a many-to-one relationship from the children to the parent
+    # races = relationship("Race", back_populates="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
+    @validates("elect_open")
+    def update_elect_open(self, key, value):
+        try:
+            for race in self.races:
+                race.race_open = value
+            return value
+        except Exception as e:
+            print("Exception: ", e)
+            
+    # Update race_open in child races on elect_open update.  Should only be one-way.
+    # I do not understand what is happening here.
     def as_dictionary(self):
         election = {
         "id": self.id,
@@ -85,6 +73,10 @@ class Election(Base):
         }
         return election
 
+# This needs to go somewhere to get the mapper backrefs configured so I can use
+# them in the child classes:
+
+configure_mappers()
 
 class Race(Base):
     """ Race class scheme """
@@ -93,11 +85,16 @@ class Race(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    race_open = Column(Boolean, default=True)
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'), nullable=False)
-    election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
+    # election = relationship("Election", backref="races")
+    election_type = Column(Integer, ForeignKey('elect_type.id'),
+        default=election.default_election_type)
+    # election_type = column_property(election.c.default_election_type)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
+
 
     def as_dictionary(self):
         race = {
@@ -184,7 +181,7 @@ class ElectionType(Base):
             raise NoRaces("No race with id {}".format(race_id))
         elif not race.candidates:
             raise NoCandidates("No candidates found for race id {}".format(race_id))
-        elif race.election.elect_open == True:
+        elif race.race_open == True:
             raise OpenElection("Race id {} in Election {} is still open.".format(
                 race_id, race.election_id))
         elif num_votes_cast == 0:
@@ -198,3 +195,32 @@ class ElectionType(Base):
     # @hybrid_method
     # def check_results(self, results):
     #     pass
+
+class User(Base):
+    """ User class scheme """
+    __tablename__ = "user"
+    id = Column(Integer, primary_key=True)
+    name = Column(Text)
+    email = Column(Text, unique = True)
+    password = Column(Text)
+
+    # Foreign relationships
+    # registered_elections = relationship("Election", backref="user")
+    administered_elections = relationship("Election", backref="admin")
+    votes = relationship("Vote", backref="user")
+    # groups = relationship("Group", backref="user")
+
+    def as_dictionary(self):
+        user = {
+        "id": self.id,
+        "name": self.name,
+        "email": self.email,
+        "password": self.password
+
+        # "file": {
+        #     "id": self.file.id,
+        #     "filename": self.file.filename,
+        #     "path": url_for("uploaded_file", filename=self.file.filename)
+        #     }
+        }
+        return user

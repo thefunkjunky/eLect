@@ -83,11 +83,11 @@ class TestAPI(unittest.TestCase):
 
         self.raceA = models.Race(
             title = "Race A",
-            election_id = self.electionA.id
+            election = self.electionA
             )
         self.raceB = models.Race(
             title = "Race B",
-            election_id = self.electionB.id
+            election = self.electionB
             )
 
         session.add_all([self.raceA,self.raceB])
@@ -433,7 +433,7 @@ class TestAPI(unittest.TestCase):
         models.Vote.user_id == userA.id,
         models.Vote.candidate_id == candidateA.id).count()
         self.assertEqual(vote_count, 1)
-        
+
         data = {
         "value": 1,
         "user_id": userA.id,
@@ -633,6 +633,8 @@ class TestAPI(unittest.TestCase):
         """Test standard Winner-Take-All tallying"""
         self.populate_database()
 
+        print("default race type", self.raceA.election_type)
+
         self.voteA1 = models.Vote(
             value = 1,
             candidate_id = self.candidateAA.id,
@@ -679,6 +681,9 @@ class TestAPI(unittest.TestCase):
             "/api/elections/{}/races/{}/tally".format(
                 self.electionA.id, self.raceA.id),
             headers=[("Accept", "application/json")])
+        
+        results = json.loads(response.data.decode("ascii"))
+        print("results message: ", results["message"])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
@@ -687,7 +692,6 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(highscore_winners[1], 2)
         self.assertEqual(winners[0].id, 1)
 
-        results = json.loads(response.data.decode("ascii"))
         results_long = json.loads(longURL_response.data.decode("ascii"))
         # I don't know why it turns the key into a str, but the value is still int
         self.assertEqual(results["1"], 2)

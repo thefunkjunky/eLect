@@ -53,7 +53,8 @@ race_schema = {
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
         "election_id": {"type": "number"},
-        "election_type": {"type": "number"}
+        "election_type": {"type": "number"},
+        "race_open": {"type": "boolean"},
     },
     "required": ["title", "election_id"]
 }
@@ -395,7 +396,7 @@ def get_tally(race_id, elect_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    # Finds race type_id
+    # Finds race election type
     type_id = race.election_type
 
     # Finds type with type_id
@@ -507,6 +508,7 @@ def race_post():
     optional_keys_defaults = {
     "description_short": "", 
     "description_long": "",
+    "race_open": True,
     "election_type": election.default_election_type}
 
     for key,value in optional_keys_defaults.items():
@@ -523,6 +525,7 @@ def race_post():
         # end_date = data["end_date"],
         election_id = data["election_id"],
         election_type = data["election_type"],
+        race_open = data["race_open"],
         )
     session.add(race)
     session.commit()
@@ -559,6 +562,8 @@ def candidate_post():
                 candidate.title, race.id)
             data = json.dumps({"message": message})
             return Response(data, 403, mimetype="application/json")
+
+    # Check if race is already closed
 
     # Populate defaults if no data given for optional keys
     optional_keys_defaults = {
