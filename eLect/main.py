@@ -12,6 +12,8 @@ class OpenElection(Exception):
     pass
 class NoVotes(Exception):
     pass
+class AlreadyVoted(Exception):
+    pass
 class NoResults(Exception):
     # Just raise nonetype?
     pass

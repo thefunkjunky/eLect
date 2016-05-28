@@ -8,7 +8,17 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import func
 
 
-from eLect.main import NoRaces, NoCandidates, ClosedElection, NoVotes, NoWinners,TiedResults, NoResults, OpenElection
+from eLect.main import (
+    NoRaces, 
+    NoCandidates, 
+    ClosedElection,
+    NoVotes,
+    NoWinners,
+    TiedResults,
+    NoResults,
+    OpenElection,
+    AlreadyVoted)
+
 # from .utils import num_votes_cast
 from .database import Base, engine, session
 

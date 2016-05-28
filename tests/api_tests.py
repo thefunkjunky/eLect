@@ -13,7 +13,16 @@ import sys
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
 from eLect.main import app
-from eLect.main import NoRaces, NoCandidates, ClosedElection, NoVotes, NoWinners,TiedResults, NoResults, OpenElection
+from eLect.main import (
+    NoRaces, 
+    NoCandidates, 
+    ClosedElection,
+    NoVotes,
+    NoWinners,
+    TiedResults,
+    NoResults,
+    OpenElection,
+    AlreadyVoted)
 from eLect import models
 from eLect.utils import num_votes_cast
 from eLect.database import Base, engine, session
@@ -396,7 +405,6 @@ class TestAPI(unittest.TestCase):
         "candidate_id": candidateA.id
         }
 
-
         response = self.client.post("/api/votes",
             data=json.dumps(data),
             content_type="application/json",
@@ -419,6 +427,47 @@ class TestAPI(unittest.TestCase):
 
         vote = votes[0]
         self.assertEqual(vote.user_id, userA.id)
+
+    def test_invalid_header_data(self):
+        """Tests invalid JSON schema for POST/PUT endpoints"""
+        elect_data = {
+        "title": "Election A",
+        "admin_id": "1"
+        }
+
+        race_data = {
+        "title": "Race A",
+        "elect_id": 1
+        }
+
+        cand_data = {
+        "name": "Candidate A",
+        "race_id": 1
+        }
+
+        vote_data = {
+        "value": "1",
+        "user_id": 1,
+        "candidate_id": 1
+        }
+
+        user_data = {
+        "name": "User A",
+        "password": "whatever",
+        }
+
+        datalist = [elect_data, race_data, cand_data, vote_data, user_data]
+        endpoint_list = ["elections", "races", "candidates", "votes", "users"]
+        endpoint_data_dict = dict(zip(endpoint_list, datalist))
+
+        for endpoint, data in endpoint_data_dict.items():
+            response = self.client.post("/api/{}".format(endpoint),
+                data=json.dumps(data),
+                content_type="application/json",
+                headers=[("Accept", "application/json")]
+            )
+            self.assertEqual(response.status_code, 422)
+            self.assertEqual(response.mimetype, "application/json")
 
 
     def test_tally_no_races(self):

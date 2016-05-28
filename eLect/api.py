@@ -9,6 +9,16 @@ from jsonschema import validate, ValidationError
 from . import models
 from . import decorators
 from eLect.main import app
+from eLect.main import (
+    NoRaces, 
+    NoCandidates, 
+    ClosedElection,
+    NoVotes,
+    NoWinners,
+    TiedResults,
+    NoResults,
+    OpenElection,
+    AlreadyVoted)
 from .database import session
 from eLect.utils import get_or_create
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
@@ -624,7 +634,7 @@ def vote_post():
     session.commit()
 
     # Return a 201 Created, containing the vote as JSON and with the 
-    # Location header set to the location of the candidate
+    # Location header set to the location of the election
     data = json.dumps(vote.as_dictionary())
     headers = {"Location": url_for("election_get", elect_id=candidate.race.election.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
