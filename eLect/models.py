@@ -32,9 +32,9 @@ class Election(Base):
     description_short = Column(Text)
     description_long = Column(Text)
     ## datetime not json serializable.  need to fix
-    # start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
-    # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     elect_open = Column(Boolean, default=True)
 
     # Foreign relationships
@@ -92,20 +92,45 @@ class Race(Base):
     # election.default_election_type when instances are created,
     # but NOT attempting to do so when modules are being loaded 
     # on import (before the instances can be created)
-    election_type = Column(Integer, ForeignKey('elect_type.id'))
+    election_type = Column(Integer, ForeignKey('elect_type.id'), default=None)
     # configure_mappers()
     # election_type = election.default_election_type
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
+    # @hybrid_method
+    def __init__(self, *args, **kwargs):
+        """Things that need to be done on init, like assign election_type"""
 
-    # def __init__(self, *args, **kwargs):
-    #     print("*args: ", *args)
-    #     print("**kwargs: ", **kwargs)
-    #     if election:
-    #         self.election = election
-    #     elif election_id:
-    #         election = session.query(Election).get(election_id)
-    #         self.election_type = election.default_election_type
+        # This super() passes along the *args and **kwargs to the base class,
+        # so that I don't have to bother with the complexitity of initializing 
+        # the fields of the model here (again)
+        super(Race, self).__init__(*args, **kwargs)
+        # unpacks the kwargs into a dict
+        params = dict((k, v) for k, v in kwargs.items())
+        # check to see if elect_id was passed, or an election object
+        if "election_id" in params.keys():
+            election_id = params["election_id"]
+            self.election = session.query(Election).get(election_id)
+            if self.election_type == None:
+                self.election_type = self.election.default_election_type
+        elif "election" in params.keys():
+            self.election = params["election"]
+            if self.election_type == None:
+                self.election_type = self.election.default_election_type
+
+        # try:
+        #     election_id = params["election_id"]
+        #     self.election = session.query(Election).get(election_id)
+        #     self.election_type = self.election.default_election_type
+        # except KeyError:
+        #     self.election = params["election"]
+        #     self.election_type = self.election.default_election_type
+        # else:
+        #     pass
+
+        # instance = Race(**params)
+        # session.add(instance)
+        # return instance
 
     def as_dictionary(self):
         race = {

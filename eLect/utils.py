@@ -6,8 +6,6 @@ from sqlalchemy.sql import func
 from . import models
 from eLect.database import Base, engine, session
 
-### I should probably use this for creating/returning ElectionType object instances
-### NOTE: Won't work if given the ElectionType, returns a tuple
 def get_or_create(session, model, defaults=None, **kwargs):
     """ Returns instance if already exists, creates and returns one if not """
     instance = session.query(model).filter_by(**kwargs).first()

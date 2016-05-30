@@ -683,7 +683,6 @@ class TestAPI(unittest.TestCase):
             headers=[("Accept", "application/json")])
         
         results = json.loads(response.data.decode("ascii"))
-        print("results message: ", results["message"])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(longURL_response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
