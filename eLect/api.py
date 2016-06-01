@@ -9,16 +9,7 @@ from jsonschema import validate, ValidationError
 from . import models
 from . import decorators
 from eLect.main import app
-from eLect.main import (
-    NoRaces, 
-    NoCandidates, 
-    ClosedElection,
-    NoVotes,
-    NoWinners,
-    TiedResults,
-    NoResults,
-    OpenElection,
-    AlreadyVoted)
+from eLect.custom_exceptions import *
 from .database import session
 from eLect.utils import get_or_create
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
@@ -41,7 +32,11 @@ election_schema = {
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
         "elect_open": {"type": "boolean"},
-        "default_election_type": {"type": "number"},
+        "default_election_type": {"enum": [
+                "WTA",
+                "Proportional",
+                "Schulze"]
+                },
         "admin_id": {"type": "number"}
     },
     "required": ["title", "admin_id"]
@@ -53,7 +48,11 @@ race_schema = {
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
         "election_id": {"type": "number"},
-        "election_type": {"type": "number"},
+        "election_type": {"enum": [
+                "WTA",
+                "Proportional",
+                "Schulze"]
+                },
         "race_open": {"type": "boolean"},
     },
     "required": ["title", "election_id"]
@@ -103,14 +102,14 @@ def init_tally_types():
 
 ### Assign electiontypes model
 # TODO: There has GOT to be a better way to do this
-def assign_election_type(type_id):
-    if type_id == 1:
+def assign_election_type(elect_type):
+    if elect_type == "WTA":
         elect_type = WinnerTakeAll()
         return elect_type
-    if type_id == 2:
+    if elect_type == "Proportional":
         elect_type = Proportional()
         return elect_type
-    if type_id == 3:
+    if elect_type == "Schulze":
         elect_type = Schulze()
         return elect_type
 
@@ -354,7 +353,6 @@ def user_get(user_id):
 def types_get():
     """ Returns a list of election types """
     elect_types = session.query(models.ElectionType)
-    elect_types = elect_types.order_by(models.ElectionType.id)
 
     if not elect_types:
         message = "No election types in database."
@@ -364,14 +362,14 @@ def types_get():
     data = json.dumps([elect_type.as_dictionary() for elect_type in elect_types])
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/types/<int:types_id>", methods=["GET"])
+@app.route("/api/types/<type_enum>", methods=["GET"])
 @decorators.accept("application/json")
-def type_get(type_id):
+def type_get(type_enum):
     """ Returns information about an election type """
-    elect_type = session.query(models.ElectionType).get(type_id)
+    elect_type = session.query(models.ElectionType).get(type_enum)
 
     if not elect_type:
-        message = "No election type with id #{}.".format(type_id)
+        message = "No election type with enum value of \"{}\".".format(type_enum)
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
@@ -387,26 +385,24 @@ def get_tally(race_id, elect_id=None):
     if elect_id:
         check_election_id(elect_id)
 
+    # Checks race_id
+    check_race_id(race_id)
+
     # Finds race with race_id
     race = session.query(models.Race).get(race_id)
 
-    # Check for race's existence
-    if not race:
-        message = "Could not find race with id {}".format(race_id)
-        data = json.dumps({"message": message})
-        return Response(data, 404, mimetype="application/json")
-
     # Finds race election type
-    type_id = race.election_type
+    elect_type_enum = race.election_type
 
-    # Finds type with type_id
-    elect_type = assign_election_type(type_id)
+    # Inits elect_type object with elect_type_enum identifier
+    elect_type = assign_election_type(elect_type_enum)
     if not elect_type:
-        message = "Could not find election type with id {}".format(race_id)
+        message = "Could not find election type with enum {}".format(
+            elect_type_enum)
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    # Init tally object
+    # Attempts to tally race and check results, according to elect_type rules
     try:
         results = elect_type.tally_race(race_id)
         elect_type.check_results(results)
@@ -446,29 +442,8 @@ def election_post():
     #         data = json.dumps({"message": message})
     #         return Response(data, 403, mimetype="application/json")
 
-    # Populate defaults if no data given for optional keys
-    optional_keys_defaults = {
-    "description_short": "", 
-    "description_long": "",
-    "elect_open": True,
-    "default_election_type": 1}
-
-    for key,value in optional_keys_defaults.items():
-        try:
-            test = data["{}".format(key)]
-        except KeyError:
-            data["{}".format(key)] = value
-
-    # Add the election to the database
-    election = models.Election(
-        title = data["title"],
-        description_short = data["description_short"],
-        description_long = data["description_long"],
-        # end_date = data["end_date"],
-        elect_open = data["elect_open"],
-        default_election_type = data["default_election_type"],
-        admin_id = data["admin_id"]
-        )
+    # Inits election object from request data and populates db
+    election=models.Election(**data)
     session.add(election)
     session.commit()
 
@@ -505,28 +480,9 @@ def race_post():
                 data = json.dumps({"message": message})
                 return Response(data, 403, mimetype="application/json")
     # Populate defaults if no data given for optional keys
-    optional_keys_defaults = {
-    "description_short": "", 
-    "description_long": "",
-    "race_open": True,
-    "election_type": election.default_election_type}
-
-    for key,value in optional_keys_defaults.items():
-        try:
-            data["{}".format(key)]
-        except KeyError:
-            data["{}".format(key)] = value
-
+    
     # Add the race to the database
-    race = models.Race(
-        title = data["title"],
-        description_short = data["description_short"],
-        description_long = data["description_long"],
-        # end_date = data["end_date"],
-        election = election,
-        election_type = data["election_type"],
-        race_open = data["race_open"],
-        )
+    race = models.Race(**data)
     session.add(race)
     session.commit()
 
@@ -565,24 +521,8 @@ def candidate_post():
 
     # Check if race is already closed
 
-    # Populate defaults if no data given for optional keys
-    optional_keys_defaults = {
-    "description_short": "", 
-    "description_long": ""}
-
-    for key,value in optional_keys_defaults.items():
-        try:
-            test = data["{}".format(key)]
-        except KeyError:
-            data["{}".format(key)] = value
-
     # Add the candidate to the database
-    candidate = models.Candidate(
-        title = data["title"],
-        description_short = data["description_short"],
-        description_long = data["description_long"],
-        race_id = data["race_id"]
-        )
+    candidate = models.Candidate(**data)
     session.add(candidate)
     session.commit()
 
@@ -630,11 +570,7 @@ def vote_post():
         return Response(data, 403, mimetype="application/json")
 
     # Add the vote to the database
-    vote = models.Vote(
-        value = data["value"],
-        candidate_id = data["candidate_id"],
-        user_id = data["user_id"]
-        )
+    vote = models.Vote(**data)
     session.add(vote)
     session.commit()
 
@@ -668,11 +604,7 @@ def user_post():
             return Response(data, 403, mimetype="application/json")
 
     # Add the user to the database
-    user = models.User(
-        name = data["name"],
-        email = data["email"],
-        password = data["password"],
-        )
+    user = models.User(**data)
     session.add(user)
     session.commit()
 

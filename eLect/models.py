@@ -2,27 +2,26 @@ import os.path
 import datetime
 
 from flask import url_for
-from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey
+from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey, Enum
 from sqlalchemy.orm import relationship, validates, column_property, backref, configure_mappers
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import func, select
+# Not sure if this is the best way to go about creating this ENUM
+from sqlalchemy.dialects.postgresql import ENUM
 
 
-from eLect.main import (
-    NoRaces, 
-    NoCandidates, 
-    ClosedElection,
-    NoVotes,
-    NoWinners,
-    TiedResults,
-    NoResults,
-    OpenElection,
-    AlreadyVoted)
-
+from eLect.custom_exceptions import *
 # from .utils import num_votes_cast
 from .database import Base, engine, session
 
-
+### Define election type enum
+# (not sure if this is the best way to do this
+election_type_enum = ENUM(
+    "WTA",
+    "Proportional",
+    "Schulze",
+    name="election_type",
+    create_type=False)
 
 class Election(Base):
     """ Election class scheme """
@@ -31,20 +30,21 @@ class Election(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
-    ## datetime not json serializable.  need to fix
-    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    # start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
-    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     elect_open = Column(Boolean, default=True)
 
     # Foreign relationships
-    default_election_type = Column(Integer, ForeignKey('elect_type.id'), default=1)
-    # races = relationship("Race", backref=backref("election", lazy="joined"), cascade="all, delete-orphan")
+    default_election_type = Column(election_type_enum, 
+        ForeignKey('elect_type.election_type'), 
+        default="WTA")
     races = relationship("Race", backref="election", cascade="all, delete-orphan")
-    # races = relationship("Race", back_populates="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
+    # Update race_open in child races on elect_open update.  Should only be one-way.
+    # I do not understand what is happening here.
     @validates("elect_open")
     def update_elect_open(self, key, value):
         try:
@@ -52,10 +52,9 @@ class Election(Base):
                 race.race_open = value
             return value
         except Exception as e:
-            print("Exception: ", e)
+            raise Update_elect_open_Failed(
+                "Update elect_open failed, Exception: ", e)
             
-    # Update race_open in child races on elect_open update.  Should only be one-way.
-    # I do not understand what is happening here.
     def as_dictionary(self):
         election = {
         "id": self.id,
@@ -70,10 +69,6 @@ class Election(Base):
         "admin_id": self.admin_id,
         }
         return election
-    # This needs to go somewhere to get the mapper backrefs configured so I can use
-    # them in the child classes:
-    # configure_mappers()
-
 
 class Race(Base):
     """ Race class scheme """
@@ -86,18 +81,11 @@ class Race(Base):
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'))
-    # election = relationship("Election", backref="races")
-    ### DESPERATELY NEEDED:
-    # Figure out how to set election_type default to parent 
-    # election.default_election_type when instances are created,
-    # but NOT attempting to do so when modules are being loaded 
-    # on import (before the instances can be created)
-    election_type = Column(Integer, ForeignKey('elect_type.id'), default=None)
-    # configure_mappers()
-    # election_type = election.default_election_type
+    election_type = Column(election_type_enum, 
+        ForeignKey('elect_type.election_type'), 
+        default=None)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
 
-    # @hybrid_method
     def __init__(self, *args, **kwargs):
         """Things that need to be done on init, like assign election_type"""
 
@@ -107,7 +95,10 @@ class Race(Base):
         super(Race, self).__init__(*args, **kwargs)
         # unpacks the kwargs into a dict
         params = dict((k, v) for k, v in kwargs.items())
-        # check to see if elect_id was passed, or an election object
+        # check to see if elect_id was passed, or an election object,
+        # then initializes the parent election object accordingly, and
+        # assigns race.election_type to parent election.default_election_type
+        # if no race.election_type found (default type = None)
         if "election_id" in params.keys():
             election_id = params["election_id"]
             self.election = session.query(Election).get(election_id)
@@ -118,19 +109,6 @@ class Race(Base):
             if self.election_type == None:
                 self.election_type = self.election.default_election_type
 
-        # try:
-        #     election_id = params["election_id"]
-        #     self.election = session.query(Election).get(election_id)
-        #     self.election_type = self.election.default_election_type
-        # except KeyError:
-        #     self.election = params["election"]
-        #     self.election_type = self.election.default_election_type
-        # else:
-        #     pass
-
-        # instance = Race(**params)
-        # session.add(instance)
-        # return instance
 
     def as_dictionary(self):
         race = {
@@ -185,19 +163,38 @@ class Vote(Base):
         }
         return vote
 
-
 class ElectionType(Base):
     """ Election Type class scheme """
     __tablename__ = "elect_type"
-    id = Column(Integer, primary_key=True)
+    # id = Column(Integer, primary_key=True)
+
+    election_type = Column(election_type_enum, primary_key=True, nullable=False)
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
 
+    def __init__(self, *args, **kwargs):
+        """Things that need to be done on init, like delete duplicate entries"""
+
+        # Pass along any *args and **kwargs to parent ElectionType class
+        super(ElectionType, self).__init__(*args, **kwargs)
+
+        # unpacks the kwargs into a dict
+        params = dict((k, v) for k, v in kwargs.items())
+
+        # Find and remove any duplicate entries
+        existing_elect_type = session.query(ElectionType).filter(
+            ElectionType.election_type == params["election_type"]).all()
+        print("Found existing_elect_types: ", existing_elect_types)
+        for instance in existing_elect_type:
+            session.delete(instance)
+            session.commit()
+
+
 
     def as_dictionary(self):
         elect_type = {
-        "id": self.id,
+        "election_type": self.election_type,
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,

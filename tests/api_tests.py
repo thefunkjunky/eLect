@@ -13,18 +13,9 @@ import sys
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
 from eLect.main import app
-from eLect.main import (
-    NoRaces, 
-    NoCandidates, 
-    ClosedElection,
-    NoVotes,
-    NoWinners,
-    TiedResults,
-    NoResults,
-    OpenElection,
-    AlreadyVoted)
+from eLect.custom_exceptions import *
 from eLect import models
-from eLect.utils import num_votes_cast
+from eLect.utils import get_or_create, num_votes_cast
 from eLect.database import Base, engine, session
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
@@ -39,7 +30,7 @@ class TestAPI(unittest.TestCase):
 
         # Set up the tables in the database
         Base.metadata.create_all(engine)
-        
+
     def init_elect_types(self):
         """Set up ElectionType Objects"""
         self.wta = WinnerTakeAll()
@@ -48,7 +39,7 @@ class TestAPI(unittest.TestCase):
 
         session.add_all([self.wta, self.proportional, self.schulze])
 
-    def populate_database(self, election_type=1):
+    def populate_database(self, election_type="WTA"):
         self.init_elect_types()
 
         self.userA = models.User(
@@ -114,11 +105,11 @@ class TestAPI(unittest.TestCase):
         session.commit()
 
         # Add election types
-        self.wta = WinnerTakeAll()
-        self.proportional = Proportional()
-        self.schulze = Schulze()
-        session.add_all([self.wta, self.proportional, self.schulze])
-        session.commit()
+        # self.wta = WinnerTakeAll()
+        # self.proportional = Proportional()
+        # self.schulze = Schulze()
+        # session.add_all([self.wta, self.proportional, self.schulze])
+        # session.commit()
 
     def test_unsupported_accept_header(self):
         response = self.client.get("/api/elections",
@@ -511,9 +502,7 @@ class TestAPI(unittest.TestCase):
 
         electionA = models.Election(
             title = "Election A",
-            admin_id = userA.id,
-            default_election_type = 1
-            )
+            admin_id = userA.id)
 
         session.add(electionA)
         session.commit()
@@ -541,9 +530,7 @@ class TestAPI(unittest.TestCase):
 
         electionA = models.Election(
             title = "Election A",
-            admin_id = userA.id,
-            default_election_type = 1
-            )
+            admin_id = userA.id)
 
         session.add(electionA)
         session.commit()
@@ -743,7 +730,7 @@ class TestAPI(unittest.TestCase):
 
     def test_tally_proportional(self):
         """Test standard Proportional tallying"""
-        self.populate_database(2)
+        self.populate_database(election_type="Proportional")
 
         self.voteA1 = models.Vote(
             value = 1,

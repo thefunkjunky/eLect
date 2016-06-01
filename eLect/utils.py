@@ -6,7 +6,7 @@ from sqlalchemy.sql import func
 from . import models
 from eLect.database import Base, engine, session
 
-def get_or_create(session, model, defaults=None, **kwargs):
+def get_or_create(model, defaults=None, **kwargs):
     """ Returns instance if already exists, creates and returns one if not """
     instance = session.query(model).filter_by(**kwargs).first()
     if instance:

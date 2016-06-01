@@ -5,7 +5,7 @@ from operator import itemgetter
 from sqlalchemy.sql import func
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from eLect.main import app
-from eLect.main import NoRaces, NoCandidates, ClosedElection, NoVotes, NoWinners,TiedResults, NoResults, OpenElection
+from eLect.custom_exceptions import *
 from eLect.utils import num_votes_cast
 from eLect import models
 from eLect.models import ElectionType
@@ -17,6 +17,7 @@ class WinnerTakeAll(ElectionType):
     """ Winner-Take-All elections class """
     def __init__(self):
         # super().__init__()
+        self.election_type = "WTA"
         self.title = "Winner-Take-All"
         self.description_short = "Voter may select one candidate,"\
         " and one winner is declared based upon a simple majority."
@@ -72,12 +73,11 @@ class WinnerTakeAll(ElectionType):
         query = session.query(models.ElectionType).get(1)
         return WinnerTakeAll()
 
-
-
 class Proportional(ElectionType):
     """ Proportional elections class. Returns a dict of cand.ids:score"""
     def __init__(self):
         # super(Proportional, self).__init__()
+        self.election_type = "Proportional"
         self.title = "Proportional"
         self.description_short = "Voter may choose one candidate, "\
         "and all candidates are tallied proportinally to each other as "\
@@ -119,6 +119,7 @@ class Schulze(ElectionType):
     """ Schulze elections class """
     def __init__(self):
         # super(Schulze, self).__init__()
+        self.election_type = "Schulze"
         self.title = "Schulze (Condorcet)"
         self.description_short = "Voter may rank ALL candidates in relation to each other." 
         self.description_long = "Offers voters the most power for their vote. "\
