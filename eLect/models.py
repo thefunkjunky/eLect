@@ -54,7 +54,7 @@ class Election(Base):
         except Exception as e:
             raise Update_elect_open_Failed(
                 "Update elect_open failed, Exception: ", e)
-            
+
     def as_dictionary(self):
         election = {
         "id": self.id,
@@ -185,7 +185,6 @@ class ElectionType(Base):
         # Find and remove any duplicate entries
         existing_elect_type = session.query(ElectionType).filter(
             ElectionType.election_type == params["election_type"]).all()
-        print("Found existing_elect_types: ", existing_elect_types)
         for instance in existing_elect_type:
             session.delete(instance)
             session.commit()

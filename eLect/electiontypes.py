@@ -2,7 +2,9 @@ import os
 import json
 from operator import itemgetter
 
-from sqlalchemy.sql import func
+from sqlalchemy import text
+from sqlalchemy.sql import func, select
+from sqlalchemy.orm import aliased, with_polymorphic
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from eLect.main import app
 from eLect.custom_exceptions import *
@@ -88,7 +90,7 @@ class Proportional(ElectionType):
 
     @hybrid_method
     def tally_race(self, race_id):
-        """ Tallies the votes for a race """
+        """ Tallies the votes for race_id with election_type = "Proportional" """
 
         # # The easy-to-read way of doing this
         # SEE WTA for a quicker method (commented out)
@@ -108,11 +110,11 @@ class Proportional(ElectionType):
 
     @hybrid_method
     def check_results(self, results):
-        """ Checks the results returned by the WTA tally_race() method """
+        """ Checks the results returned by the Proportional tally_race() method """
         if not results:
             raise NoResults("No results found")
-        if len(results) < 1:
-            raise NoWinners("No winners found")
+        # if len(results) < 1:
+        #     raise NoWinners("No winners found")
 
 
 class Schulze(ElectionType):
@@ -130,7 +132,84 @@ class Schulze(ElectionType):
         "The best option for races with 3 or more candidates, that must end with a single winner."
 
     @hybrid_method
+    def gen_pair_results(self, race):
+        """Method required by Schulze tally_race() that generates 
+        dict of key:value pairs, defined as 
+        (candA, CandB) tuple of unique canididate pairs from race:
+        # of voters who preferred candA over candB on each individual ballot """
+
+        pair_results = {}
+        ### Original SELECT from previous version
+        ## NOTE: previous version used a BALLOT table, which represented 
+        ##      all of a user's votes for a given race
+        ##      Let's try to do this without creating a (permanent) ballot table
+        ##      Maybe create a View, or temporary table
+        #
+        # SELECT tmp.cand1 As 'candidate1', tmp.cand2 AS 'candidate2', COUNT(*) FROM 
+        # ( SELECT v1.`ballot_id`, v1.cand_id AS 'cand1', v1.score AS 'score1', v2.cand_id AS 'cand2', v2.score AS 'score2' 
+        # FROM votes v1 INNER JOIN votes v2 
+        # ON (v1.ballot_id = v2.ballot_id) AND v1.cand_id <> v2.cand_id ) 
+        # AS tmp WHERE tmp.score1 > tmp.score2 
+        # GROUP BY tmp.cand1, tmp.cand2"
+
+        # Figure out a way to scale this appropriately 
+        # in order to avoid loading too much data on large elections, or spending
+        # too long on Python loops.  Remember how fast the original SELECT was
+
+        # WTA example
+        # results = session.query(
+        #     func.sum(models.Vote.value)).add_column(
+        #     models.Vote.candidate_id).filter(
+        #     models.Vote.candidate.has(race_id = race_id)).group_by(
+        #     models.Vote.candidate_id).all()
+
+        # try:
+            # conn = engine.connect()
+            # cand_pairs = select([v1.cand1, v1.cand2])
+
+        # ballots = session.query(models.User.id,
+        # models.Vote).filter(
+        #     models.Vote.user_id == models.User.id,
+        #     models.Vote.candidate.has(race_id=race.id)
+        #     ).all()
+
+        # where to change use_labels=True? How to access underlying select()?
+        votes = session.query(models.User.id.label("user_id"),
+        models.Vote).filter(
+            models.Vote.user_id == models.User.id,
+            models.Vote.candidate.has(race_id=race.id)
+            ).subquery() 
+
+        print("votes: ", votes, "\n")
+
+        cand2 = aliased(models.Candidate, name="cand2")
+        # cand_pairs = session.query(models.Candidate,
+        #  cand2).filter(
+        #     models.Candidate.race_id == race.id,
+        #     cand2.race_id == race.id,
+        #     models.Candidate.id != cand2.id).all() # .subquery() ?
+
+        cand_pairs = session.query(models.Candidate.id.label("cand1_id"),
+        cand2.id.label("cand2_id")).filter(
+            models.Candidate.race_id == race.id,
+            cand2.race_id == race.id,
+            models.Candidate.id != cand2.id).subquery()
+        print("cand_pairs: ", cand_pairs)
+
+
+        # for pair in cand_pairs:
+        #     pair_results = session.query(func.count(models.Votes))
+        # cand_pair_ids = [(candA.id, candB.id) for candA, candB in cand_pairs]
+        # print("cand_pairs: ", cand_pair_ids)
+
+
+        # cand_pair_results = {(candA, candB):None for candA, candB in cand_pairs}
+        cand_pair_results = None
+        return cand_pair_results
+
+    @hybrid_method
     def tally_race(self, race_id):
-        """ Tallies the votes for a race """
-        race = session.query("models.Race").get(race_id)
+        """ Tallies the votes for race_id with election_type = "Schulze" """
+        race = session.query(models.Race).get(race_id)
+        pair_results = self.gen_pair_results(race)
 

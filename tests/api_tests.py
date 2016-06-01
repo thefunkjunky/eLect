@@ -96,6 +96,12 @@ class TestAPI(unittest.TestCase):
         self.candidateBB = models.Candidate(
             title = "Candidate BB",
             race_id = self.raceB.id)
+        self.candidateBC = models.Candidate(
+            title = "Candidate BC",
+            race_id = self.raceB.id)
+        self.candidateBD = models.Candidate(
+            title = "Candidate BD",
+            race_id = self.raceB.id)
 
         session.add_all([
             self.candidateAA,
@@ -103,13 +109,6 @@ class TestAPI(unittest.TestCase):
             self.candidateBA,
             self.candidateBB])
         session.commit()
-
-        # Add election types
-        # self.wta = WinnerTakeAll()
-        # self.proportional = Proportional()
-        # self.schulze = Schulze()
-        # session.add_all([self.wta, self.proportional, self.schulze])
-        # session.commit()
 
     def test_unsupported_accept_header(self):
         response = self.client.get("/api/elections",
@@ -451,7 +450,8 @@ class TestAPI(unittest.TestCase):
         """Tests invalid JSON schema for POST/PUT endpoints"""
         elect_data = {
         "title": "Election A",
-        "admin_id": "1"
+        "admin_id": 1,
+        "default_election_type": "WinnerTakeAll"
         }
 
         race_data = {
@@ -756,6 +756,64 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(results[1], 2/3)
         self.assertEqual(results[2], 1/3)
+
+    def test_tally_Schulze(self):
+        """Test standard Schulze tally """
+        self.populate_database(election_type="Schulze")
+
+        uAvote1 = models.Vote(
+            user = self.userA,
+            candidate = self.candidateBA,
+            value = 1)
+        uAvote2 = models.Vote(
+            user = self.userA,
+            candidate = self.candidateBB,
+            value = 0)
+        uAvote3 = models.Vote(
+            user = self.userA,
+            candidate = self.candidateBC,
+            value = 3)
+        uAvote4 = models.Vote(
+            user = self.userA,
+            candidate = self.candidateBD,
+            value = -2)
+
+        uBvote1 = models.Vote(
+            user = self.userB,
+            candidate = self.candidateBA,
+            value = 2)
+        uBvote2 = models.Vote(
+            user = self.userB,
+            candidate = self.candidateBB,
+            value = 1)
+        uBvote3 = models.Vote(
+            user = self.userB,
+            candidate = self.candidateBC,
+            value = -2)
+        uBvote4 = models.Vote(
+            user = self.userB,
+            candidate = self.candidateBD,
+            value = 5)
+
+        uCvote1 = models.Vote(
+            user = self.userC,
+            candidate = self.candidateBA,
+            value = -2)
+        uCvote2 = models.Vote(
+            user = self.userC,
+            candidate = self.candidateBB,
+            value = 5)
+        uCvote3 = models.Vote(
+            user = self.userC,
+            candidate = self.candidateBC,
+            value = 2)
+        uCvote4 = models.Vote(
+            user = self.userC,
+            candidate = self.candidateBD,
+            value = 3)
+
+        self.schulze.tally_race(self.raceB.id)
+        self.assertEqual(1,0)
 
 
     def tearDown(self):
