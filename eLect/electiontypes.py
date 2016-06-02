@@ -198,7 +198,7 @@ class Schulze(ElectionType):
         pair_results = self.gen_pair_results(race)
 
         path_results = {}
-        winner = {}
+        final_results = {}
 
         # I totally stole this algorithm.  BECAUSE I DONT UNDERSTAND SCHULZE
         candidate_ids = [candidate for candidate,cand2 in pair_results.keys()]
@@ -216,11 +216,21 @@ class Schulze(ElectionType):
                         path_results[(cand1,cand3)]))
         print("path_results: ", path_results)
         for cand in candidate_ids:
-            winner[cand] = True
+            final_results[cand] = True
         for cand1,cand2 in pair_results.keys():
             if path_results[(cand2,cand1)] > path_results[(cand1,cand2)]:
-                winner[cand1] = False
-        print("winner: ", path_results)
+                final_results[cand1] = False
+        print("final_results: ", final_results)
 
-        return winner
+        return final_results
 
+    @hybrid_method
+    def check_results(self, results):
+        num_true = [(cand, value) for cand, value in results.items()\
+        if value==True]
+
+        if len(num_true) < 1:
+            raise NoResults("No results found, all candidates return False.")
+        elif len(num_true) > 1:
+            raise TiedResults("Results are tied between candidates: ",
+                [cand for cand,value in num_true])

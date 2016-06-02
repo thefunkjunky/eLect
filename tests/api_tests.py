@@ -835,8 +835,10 @@ class TestAPI(unittest.TestCase):
                 expected_pair_results[(cand1, cand2)])
         print("\nexpected_pair_results: ", expected_pair_results)
 
-        winner = self.schulze.tally_race(self.raceB.id)
-        print("Schulze winner: ", winner)
+        final_result = self.schulze.tally_race(self.raceB.id)
+        print("Schulze final_result: ", final_result)
+        self.schulze.check_results(final_result)
+        self.assertEqual(final_result, {3:True, 4:False, 5:False, 6:False})
         self.assertEqual(1,0)
 
 
