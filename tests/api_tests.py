@@ -12,6 +12,7 @@ import sys
 # Configure our app to use the testing database
 os.environ["CONFIG_PATH"] = "eLect.config.TestingConfig"
 
+from sqlalchemy.orm import aliased
 from eLect.main import app
 from eLect.custom_exceptions import *
 from eLect import models
@@ -811,9 +812,31 @@ class TestAPI(unittest.TestCase):
             user = self.userC,
             candidate = self.candidateBD,
             value = 3)
+        # Check gen_pair_results() method in Schulze()
+        cand_pair_results = self.schulze.gen_pair_results(self.raceB)
+        # Generate expected pair_results dict for comparitive purposes
+        vote2 = aliased(models.Vote, name="vote2")
+        expected_pair_results = {}
+        for cand1, cand2 in cand_pair_results.keys():
+            preferred_expected = 0
+            for user in [self.userA, self.userB, self.userC]:
+                v1, v2 = session.query(
+                    models.Vote.value.label("vote1"),
+                    vote2.value.label("vote2")).filter(
+                    models.Vote.user_id == user.id,
+                    vote2.user_id == user.id,
+                    models.Vote.candidate_id == cand1,
+                    vote2.candidate_id == cand2).all()[0]
+                if v1 > v2:
+                    preferred_expected += 1
+            expected_pair_results[(cand1, cand2)] = preferred_expected
+            self.assertEqual(cand_pair_results[(cand1, cand2)],
+                expected_pair_results[(cand1, cand2)])
+        print("\nexpected_pair_results: ", expected_pair_results)
 
-        self.schulze.tally_race(self.raceB.id)
-        self.assertEqual(1,0)
+
+        # self.schulze.tally_race(self.raceB.id)
+        # self.assertEqual(1,0)
 
 
     def tearDown(self):

@@ -156,56 +156,40 @@ class Schulze(ElectionType):
         # in order to avoid loading too much data on large elections, or spending
         # too long on Python loops.  Remember how fast the original SELECT was
 
-        # WTA example
-        # results = session.query(
-        #     func.sum(models.Vote.value)).add_column(
-        #     models.Vote.candidate_id).filter(
-        #     models.Vote.candidate.has(race_id = race_id)).group_by(
-        #     models.Vote.candidate_id).all()
-
-        # try:
-            # conn = engine.connect()
-            # cand_pairs = select([v1.cand1, v1.cand2])
-
-        # ballots = session.query(models.User.id,
-        # models.Vote).filter(
-        #     models.Vote.user_id == models.User.id,
-        #     models.Vote.candidate.has(race_id=race.id)
-        #     ).all()
-
-        # where to change use_labels=True? How to access underlying select()?
-        votes = session.query(models.User.id.label("user_id"),
-        models.Vote).filter(
-            models.Vote.user_id == models.User.id,
-            models.Vote.candidate.has(race_id=race.id)
-            ).subquery() 
-
-        print("votes: ", votes, "\n")
 
         cand2 = aliased(models.Candidate, name="cand2")
-        # cand_pairs = session.query(models.Candidate,
-        #  cand2).filter(
-        #     models.Candidate.race_id == race.id,
-        #     cand2.race_id == race.id,
-        #     models.Candidate.id != cand2.id).all() # .subquery() ?
-
         cand_pairs = session.query(models.Candidate.id.label("cand1_id"),
         cand2.id.label("cand2_id")).filter(
             models.Candidate.race_id == race.id,
             cand2.race_id == race.id,
             models.Candidate.id != cand2.id).subquery()
-        print("cand_pairs: ", cand_pairs)
 
+        vote2 = aliased(models.Vote, name="vote_cand2")
+        # where to change use_labels=True? How to access underlying select()?
+        votes = session.query(models.User.id.label("user_id"), 
+            cand_pairs.c.cand1_id.label("vote_cand1_id"),
+            cand_pairs.c.cand2_id.label("vote_cand2_id"),
+        models.Vote.value.label("vote_cand1_value"), 
+        vote2.value.label("vote_cand2_value")).filter(
+            models.Vote.user_id == models.User.id,
+            vote2.user_id == models.User.id,
+            # models.Vote.candidate.has(race_id=race.id),
+            models.Vote.candidate_id == cand_pairs.c.cand1_id,
+            vote2.candidate_id == cand_pairs.c.cand2_id,
+            ).subquery() 
 
-        # for pair in cand_pairs:
-        #     pair_results = session.query(func.count(models.Votes))
-        # cand_pair_ids = [(candA.id, candB.id) for candA, candB in cand_pairs]
-        # print("cand_pairs: ", cand_pair_ids)
+        cand_pair_results = session.query(
+            cand_pairs,
+            func.count("*").label("num_users_prefer")).filter(
+            votes.c.vote_cand1_id == cand_pairs.c.cand1_id,
+            votes.c.vote_cand2_id == cand_pairs.c.cand2_id,
+            votes.c.vote_cand1_value > votes.c.vote_cand2_value
+            ).group_by(cand_pairs).order_by(
+            cand_pairs.c.cand1_id, cand_pairs.c.cand2_id).all()
 
-
-        # cand_pair_results = {(candA, candB):None for candA, candB in cand_pairs}
-        cand_pair_results = None
-        return cand_pair_results
+        dict_cand_pair_results = {(cand1, cand2):num_users_prefer for \
+        cand1, cand2, num_users_prefer in cand_pair_results}
+        return dict_cand_pair_results
 
     @hybrid_method
     def tally_race(self, race_id):
