@@ -834,9 +834,9 @@ class TestAPI(unittest.TestCase):
                 expected_pair_results[(cand1, cand2)])
         print("\nexpected_pair_results: ", expected_pair_results)
 
-
-        # self.schulze.tally_race(self.raceB.id)
-        # self.assertEqual(1,0)
+        winner = self.schulze.tally_race(self.raceB.id)
+        print("Schulze winner: ", winner)
+        self.assertEqual(1,0)
 
 
     def tearDown(self):

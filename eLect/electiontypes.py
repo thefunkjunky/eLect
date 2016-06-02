@@ -196,3 +196,32 @@ class Schulze(ElectionType):
         race = session.query(models.Race).get(race_id)
         pair_results = self.gen_pair_results(race)
 
+        path_results = {}
+        winner = {}
+
+        candidate_ids = [candidate.id for candidate in race.candidates]
+        # I totally stole this algorithm.  BECAUSE I DONT UNDERSTAND SCHULZE
+        for i in candidate_ids:
+            for j in candidate_ids:
+                if i != j:
+                    if pair_results[(i,j)] > pair_results[(j,i)]:
+                        path_results[(i,j)] = pair_results[(i,j)]
+                    else:
+                        path_results[(i,j)] = 0
+        for i in candidate_ids:
+            for j in candidate_ids:
+                if i != j:
+                    for k in candidate_ids:
+                        if (i != k) and (j != k):
+                            path_results[(j,k)] = max(path_results[(j,k)], min(path_results[(j,i)], path_results[(i,k)]))
+
+        for i in candidate_ids:
+            winner[i] = True
+        for i in candidate_ids:
+            for j in candidate_ids:
+                if i != j:
+                    if path_results[(j,i)] > path_results[(i,j)]:
+                        winner[i] = False
+
+        return winner
+
