@@ -765,7 +765,7 @@ class TestAPI(unittest.TestCase):
         uAvote1 = models.Vote(
             user = self.userA,
             candidate = self.candidateBA,
-            value = 1)
+            value =5)
         uAvote2 = models.Vote(
             user = self.userA,
             candidate = self.candidateBB,
@@ -782,7 +782,7 @@ class TestAPI(unittest.TestCase):
         uBvote1 = models.Vote(
             user = self.userB,
             candidate = self.candidateBA,
-            value = 2)
+            value = 6)
         uBvote2 = models.Vote(
             user = self.userB,
             candidate = self.candidateBB,
@@ -814,6 +814,7 @@ class TestAPI(unittest.TestCase):
             value = 3)
         # Check gen_pair_results() method in Schulze()
         cand_pair_results = self.schulze.gen_pair_results(self.raceB)
+        print("cand_pair_results: ", cand_pair_results)
         # Generate expected pair_results dict for comparitive purposes
         vote2 = aliased(models.Vote, name="vote2")
         expected_pair_results = {}

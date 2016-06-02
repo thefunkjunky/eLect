@@ -156,35 +156,36 @@ class Schulze(ElectionType):
         # in order to avoid loading too much data on large elections, or spending
         # too long on Python loops.  Remember how fast the original SELECT was
 
-
         cand2 = aliased(models.Candidate, name="cand2")
-        cand_pairs = session.query(models.Candidate.id.label("cand1_id"),
-        cand2.id.label("cand2_id")).filter(
-            models.Candidate.race_id == race.id,
-            cand2.race_id == race.id,
-            models.Candidate.id != cand2.id).subquery()
+        cand_pairs = session.query(
+            models.Candidate.id.label("cand1_id"),
+            cand2.id.label("cand2_id")).filter(
+                models.Candidate.race_id == race.id,
+                cand2.race_id == race.id,
+                models.Candidate.id != cand2.id).subquery()
 
         vote2 = aliased(models.Vote, name="vote_cand2")
         # where to change use_labels=True? How to access underlying select()?
-        votes = session.query(models.User.id.label("user_id"), 
+        votes = session.query(
+            models.User.id.label("user_id"), 
             cand_pairs.c.cand1_id.label("vote_cand1_id"),
             cand_pairs.c.cand2_id.label("vote_cand2_id"),
-        models.Vote.value.label("vote_cand1_value"), 
-        vote2.value.label("vote_cand2_value")).filter(
-            models.Vote.user_id == models.User.id,
-            vote2.user_id == models.User.id,
-            models.Vote.candidate_id == cand_pairs.c.cand1_id,
-            vote2.candidate_id == cand_pairs.c.cand2_id,
-            ).subquery() 
+            models.Vote.value.label("vote_cand1_value"), 
+            vote2.value.label("vote_cand2_value")).filter(
+                models.Vote.user_id == models.User.id,
+                vote2.user_id == models.User.id,
+                models.Vote.candidate_id == cand_pairs.c.cand1_id,
+                vote2.candidate_id == cand_pairs.c.cand2_id,
+                ).subquery() 
 
         cand_pair_results = session.query(
             cand_pairs,
             func.count("*").label("num_users_prefer")).filter(
-            votes.c.vote_cand1_id == cand_pairs.c.cand1_id,
-            votes.c.vote_cand2_id == cand_pairs.c.cand2_id,
-            votes.c.vote_cand1_value > votes.c.vote_cand2_value
-            ).group_by(cand_pairs).order_by(
-            cand_pairs.c.cand1_id, cand_pairs.c.cand2_id).all()
+                votes.c.vote_cand1_id == cand_pairs.c.cand1_id,
+                votes.c.vote_cand2_id == cand_pairs.c.cand2_id,
+                votes.c.vote_cand1_value > votes.c.vote_cand2_value
+                ).group_by(cand_pairs).order_by(
+                    cand_pairs.c.cand1_id, cand_pairs.c.cand2_id).all()
 
         dict_cand_pair_results = {(cand1, cand2):num_users_prefer for \
         cand1, cand2, num_users_prefer in cand_pair_results}
@@ -199,29 +200,27 @@ class Schulze(ElectionType):
         path_results = {}
         winner = {}
 
-        candidate_ids = [candidate.id for candidate in race.candidates]
         # I totally stole this algorithm.  BECAUSE I DONT UNDERSTAND SCHULZE
-        for i in candidate_ids:
-            for j in candidate_ids:
-                if i != j:
-                    if pair_results[(i,j)] > pair_results[(j,i)]:
-                        path_results[(i,j)] = pair_results[(i,j)]
-                    else:
-                        path_results[(i,j)] = 0
-        for i in candidate_ids:
-            for j in candidate_ids:
-                if i != j:
-                    for k in candidate_ids:
-                        if (i != k) and (j != k):
-                            path_results[(j,k)] = max(path_results[(j,k)], min(path_results[(j,i)], path_results[(i,k)]))
-
-        for i in candidate_ids:
-            winner[i] = True
-        for i in candidate_ids:
-            for j in candidate_ids:
-                if i != j:
-                    if path_results[(j,i)] > path_results[(i,j)]:
-                        winner[i] = False
+        candidate_ids = [candidate for candidate,cand2 in pair_results.keys()]
+        for cand1,cand2 in pair_results.keys():
+            if pair_results[(cand1,cand2)] > pair_results[(cand2,cand1)]:
+                path_results[(cand1,cand2)] = pair_results[(cand1,cand2)]
+            else:
+                path_results[(cand1,cand2)] = 0
+        for cand1,cand2 in pair_results.keys():
+            for cand3 in candidate_ids:
+                if (cand1 != cand3) and (cand2 != cand3):
+                    path_results[(cand2,cand3)] = max(
+                        path_results[(cand2,cand3)],
+                        min(path_results[(cand2,cand1)],
+                        path_results[(cand1,cand3)]))
+        print("path_results: ", path_results)
+        for cand in candidate_ids:
+            winner[cand] = True
+        for cand1,cand2 in pair_results.keys():
+            if path_results[(cand2,cand1)] > path_results[(cand1,cand2)]:
+                winner[cand1] = False
+        print("winner: ", path_results)
 
         return winner
 
