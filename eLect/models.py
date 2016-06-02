@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship, validates, column_property, backref, co
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import func, select
 # Not sure if this is the best way to go about creating this ENUM
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ENUM, JSON
 
 
 from eLect.custom_exceptions import *
@@ -22,6 +22,7 @@ election_type_enum = ENUM(
     "Schulze",
     name="election_type",
     create_type=False)
+
 
 class Election(Base):
     """ Election class scheme """
@@ -70,6 +71,7 @@ class Election(Base):
         }
         return election
 
+
 class Race(Base):
     """ Race class scheme """
     __tablename__ = "race"
@@ -85,6 +87,7 @@ class Race(Base):
         ForeignKey('elect_type.election_type'), 
         default=None)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
+    results = relationship("Results", backref="race", cascade="all, delete-orphan")
 
     def __init__(self, *args, **kwargs):
         """Things that need to be done on init, like assign election_type"""
@@ -109,7 +112,6 @@ class Race(Base):
             if self.election_type == None:
                 self.election_type = self.election.default_election_type
 
-
     def as_dictionary(self):
         race = {
         "id": self.id,
@@ -120,6 +122,7 @@ class Race(Base):
         "election_type": self.election_type,
         }
         return race
+
 
 class Candidate(Base):
     """ Candidate class scheme """
@@ -163,6 +166,38 @@ class Vote(Base):
         }
         return vote
 
+class Results(Base):
+    """Results tallied for races"""
+    __tablename__ = "results"
+    id = Column(Integer, primary_key=True)
+    results = Column(JSON)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
+
+    # Foreign Keys
+    race_id = Column(Integer, ForeignKey("race.id"), nullable = False)
+    election_type = Column(election_type_enum, 
+        ForeignKey("elect_type.election_type"), default=None)
+
+    def __init__(self, *args, **kwargs):
+        """On __init__ of Results, assigns things like elect_type from parent Race"""
+        super(Results, self).__init__(*args, **kwargs)
+        params = dict((k, v) for k, v in kwargs.items())
+        
+        self.race = session.query(Race).get(params["race_id"])
+        self.election_type = self.race.election_type
+
+    def as_dictionary(self):
+        results = {
+        "id": self.id,
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
+        "race_id": self.race_id,
+        "election_type": self.election_type,
+        "results": self.results
+        }
+
+
 class ElectionType(Base):
     """ Election Type class scheme """
     __tablename__ = "elect_type"
@@ -189,8 +224,6 @@ class ElectionType(Base):
             session.delete(instance)
             session.commit()
 
-
-
     def as_dictionary(self):
         elect_type = {
         "election_type": self.election_type,
@@ -199,6 +232,7 @@ class ElectionType(Base):
         "description_long": self.description_long,
         }
         return elect_type
+
 
     @hybrid_method
     def check_race(self, race_id):
@@ -219,14 +253,6 @@ class ElectionType(Base):
         elif num_votes_cast == 0:
             raise NoVotes("No Votes cast in Race id {}".format(race_id))
 
-    # NOTE: be sure that all ElectionType hybrid methods are represented here
-    # @hybrid_method
-    # def tally_race(self, race_id):
-    #     pass
-
-    # @hybrid_method
-    # def check_results(self, results):
-    #     pass
 
 class User(Base):
     """ User class scheme """
@@ -237,7 +263,7 @@ class User(Base):
     password = Column(Text)
 
     # Foreign relationships
-    # registered_elections = relationship("Election", backref="user")
+    # registered_elections = relationship("Election", backref="registered_user")
     administered_elections = relationship("Election", backref="admin")
     votes = relationship("Vote", backref="user")
     # groups = relationship("Group", backref="user")
@@ -248,11 +274,5 @@ class User(Base):
         "name": self.name,
         "email": self.email,
         "password": self.password
-
-        # "file": {
-        #     "id": self.file.id,
-        #     "filename": self.file.filename,
-        #     "path": url_for("uploaded_file", filename=self.file.filename)
-        #     }
         }
         return user

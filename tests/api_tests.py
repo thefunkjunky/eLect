@@ -814,7 +814,6 @@ class TestAPI(unittest.TestCase):
             value = 3)
         # Check gen_pair_results() method in Schulze()
         cand_pair_results = self.schulze.gen_pair_results(self.raceB)
-        print("cand_pair_results: ", cand_pair_results)
         # Generate expected pair_results dict for comparitive purposes
         vote2 = aliased(models.Vote, name="vote2")
         expected_pair_results = {}
@@ -833,12 +832,23 @@ class TestAPI(unittest.TestCase):
             expected_pair_results[(cand1, cand2)] = preferred_expected
             self.assertEqual(cand_pair_results[(cand1, cand2)],
                 expected_pair_results[(cand1, cand2)])
-        print("\nexpected_pair_results: ", expected_pair_results)
 
         final_result = self.schulze.tally_race(self.raceB.id)
-        print("Schulze final_result: ", final_result)
         self.schulze.check_results(final_result)
+
+        self.dbresults = models.Results(
+            race_id = self.raceB.id,
+            results = final_result) 
+        session.add(self.dbresults)
+        session.commit()
+
+        print("results date", self.dbresults.start_date)
+        # For some reason SQLAlchemy converts the dict keys to strings on commit()
+        print("results", self.dbresults.results)
+
         self.assertEqual(final_result, {3:True, 4:False, 5:False, 6:False})
+        self.assertEqual(self.dbresults.results, final_result)
+        self.assertEqual(self.dbresults.election_type, self.raceB.election_type)
         self.assertEqual(1,0)
 
 

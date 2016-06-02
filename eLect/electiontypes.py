@@ -214,13 +214,11 @@ class Schulze(ElectionType):
                         path_results[(cand2,cand3)],
                         min(path_results[(cand2,cand1)],
                         path_results[(cand1,cand3)]))
-        print("path_results: ", path_results)
         for cand in candidate_ids:
             final_results[cand] = True
         for cand1,cand2 in pair_results.keys():
             if path_results[(cand2,cand1)] > path_results[(cand1,cand2)]:
                 final_results[cand1] = False
-        print("final_results: ", final_results)
 
         return final_results
 
