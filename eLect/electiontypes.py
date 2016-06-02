@@ -173,7 +173,6 @@ class Schulze(ElectionType):
         vote2.value.label("vote_cand2_value")).filter(
             models.Vote.user_id == models.User.id,
             vote2.user_id == models.User.id,
-            # models.Vote.candidate.has(race_id=race.id),
             models.Vote.candidate_id == cand_pairs.c.cand1_id,
             vote2.candidate_id == cand_pairs.c.cand2_id,
             ).subquery() 
