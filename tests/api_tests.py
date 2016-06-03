@@ -621,8 +621,6 @@ class TestAPI(unittest.TestCase):
         """Test standard Winner-Take-All tallying"""
         self.populate_database()
 
-        print("default race type", self.raceA.election_type)
-
         self.voteA1 = models.Vote(
             value = 1,
             candidate_id = self.candidateAA.id,
@@ -834,7 +832,6 @@ class TestAPI(unittest.TestCase):
                 expected_pair_results[(cand1, cand2)])
 
         final_result = self.schulze.tally_race(self.raceB.id)
-        self.schulze.check_results(final_result)
 
         self.dbresults = models.Results(
             race_id = self.raceB.id,
@@ -843,11 +840,14 @@ class TestAPI(unittest.TestCase):
         session.commit()
 
         print("results date", self.dbresults.start_date)
-        # For some reason SQLAlchemy converts the dict keys to strings on commit()
+        # JSON doesn't allow dict keys as anything but strings, so 
+        # the original model's keys must be converted for comparative
+        # purposes
         print("results", self.dbresults.results)
+        final_result_keys_to_str = {str(key): value for key, value in final_result.items()}
 
         self.assertEqual(final_result, {3:True, 4:False, 5:False, 6:False})
-        self.assertEqual(self.dbresults.results, final_result)
+        self.assertEqual(self.dbresults.results, final_result_keys_to_str)
         self.assertEqual(self.dbresults.election_type, self.raceB.election_type)
         self.assertEqual(1,0)
 

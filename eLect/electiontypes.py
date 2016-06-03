@@ -200,7 +200,6 @@ class Schulze(ElectionType):
         path_results = {}
         final_results = {}
 
-        # I totally stole this algorithm.  BECAUSE I DONT UNDERSTAND SCHULZE
         candidate_ids = [candidate for candidate,cand2 in pair_results.keys()]
         for cand1,cand2 in pair_results.keys():
             if pair_results[(cand1,cand2)] > pair_results[(cand2,cand1)]:

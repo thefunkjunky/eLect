@@ -7,11 +7,11 @@ from sqlalchemy.orm import relationship, validates, column_property, backref, co
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import func, select
 # Not sure if this is the best way to go about creating this ENUM
-from sqlalchemy.dialects.postgresql import ENUM, JSON
+# USE JSONB ALWAYS
+from sqlalchemy.dialects.postgresql import ENUM, JSONB
 
 
 from eLect.custom_exceptions import *
-# from .utils import num_votes_cast
 from .database import Base, engine, session
 
 ### Define election type enum
@@ -166,11 +166,12 @@ class Vote(Base):
         }
         return vote
 
+
 class Results(Base):
     """Results tallied for races"""
     __tablename__ = "results"
     id = Column(Integer, primary_key=True)
-    results = Column(JSON)
+    results = Column(JSONB)
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
@@ -238,11 +239,10 @@ class ElectionType(Base):
     def check_race(self, race_id):
         """Checks race conditions before attempting to tally votes. 
         Failed test returns Exception"""
+        from .utils import num_votes_cast
         race = session.query(Race).get(race_id)
         # Fix this query to simply return the count #, not a list of tuples
-        num_votes_cast = session.query(
-            func.count(Vote.id)).filter(
-            Vote.candidate.has(race_id = race_id)).all()[0][0]
+        num_votes_cast = num_votes_cast(race_id)
         if not race:
             raise NoRaces("No race with id {}".format(race_id))
         elif not race.candidates:
