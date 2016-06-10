@@ -7,9 +7,8 @@ from sqlalchemy.orm import relationship, validates, column_property, backref, co
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import func, select
 # Not sure if this is the best way to go about creating this ENUM
-# USE JSONB ALWAYS
+# USE JSONB ALWAYS. Requires PostgreSQL v. >= 9.4
 from sqlalchemy.dialects.postgresql import ENUM, JSONB
-
 
 from eLect.custom_exceptions import *
 from .database import Base, engine, session
@@ -45,7 +44,6 @@ class Election(Base):
     admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
     # Update race_open in child races on elect_open update.  Should only be one-way.
-    # I do not understand what is happening here.
     @validates("elect_open")
     def update_elect_open(self, key, value):
         try:
@@ -168,7 +166,7 @@ class Vote(Base):
 
 
 class Results(Base):
-    """Results tallied for races"""
+    """Tallied Results class scheme"""
     __tablename__ = "results"
     id = Column(Integer, primary_key=True)
     results = Column(JSONB)

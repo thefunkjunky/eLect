@@ -152,10 +152,6 @@ class Schulze(ElectionType):
         # AS tmp WHERE tmp.score1 > tmp.score2 
         # GROUP BY tmp.cand1, tmp.cand2"
 
-        # Figure out a way to scale this appropriately 
-        # in order to avoid loading too much data on large elections, or spending
-        # too long on Python loops.  Remember how fast the original SELECT was
-
         cand2 = aliased(models.Candidate, name="cand2")
         cand_pairs = session.query(
             models.Candidate.id.label("cand1_id"),

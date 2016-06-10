@@ -15,8 +15,50 @@ from eLect.utils import get_or_create
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 # schemas for schema validation go here...
+### GET schemas
+user_GET_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+        "email": {"type": "string"}
+    },
+    "required": [] # How to require "id" OR "email"?
+}
 
-user_schema = {
+election_GET_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
+race_GET_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
+candidate_GET_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
+vote_GET_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
+### POST schemas
+user_POST_schema = {
     "type": "object",
     "properties": {
         "name": {"type": "string"},
@@ -25,7 +67,7 @@ user_schema = {
     },
     "required": ["name", "email", "password"]
 }
-election_schema = {
+election_POST_schema = {
     "type": "object",
     "properties": {
         "title": {"type": "string"},
@@ -41,7 +83,7 @@ election_schema = {
     },
     "required": ["title", "admin_id"]
 }
-race_schema = {
+race_POST_schema = {
     "type": "object",
     "properties": {
         "title": {"type": "string"},
@@ -57,7 +99,7 @@ race_schema = {
     },
     "required": ["title", "election_id"]
 }
-candidate_schema = {
+candidate_POST_schema = {
     "type": "object",
     "properties": {
         "title": {"type": "string"},
@@ -67,7 +109,7 @@ candidate_schema = {
     },
     "required": ["title", "race_id"]
 }
-vote_schema = {
+vote_POST_schema = {
     "type": "object",
     "properties": {
         "value": {"type": "number"},
@@ -77,32 +119,99 @@ vote_schema = {
     "required": ["value", "candidate_id", "user_id"]
 }
 
+### PUT schemas
+election_PUT_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "elect_open": {"type": "boolean"},
+        "default_election_type": {"enum": [
+                "WTA",
+                "Proportional",
+                "Schulze"]
+                },
+        "admin_id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+race_PUT_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "election_id": {"type": "number"},
+        "election_type": {"enum": [
+                "WTA",
+                "Proportional",
+                "Schulze"]
+                },
+        "race_open": {"type": "boolean"},
+    },
+    "required": ["id"]
+}
+candidate_PUT_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "title": {"type": "string"},
+        "description_short": {"type": "string"},
+        "description_long": {"type": "string"},
+        "race_id": {"type": "number"},
+    },
+    "required": ["id"]
+}
+vote_PUT_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "value": {"type": "number"},
+        "user_id": {"type": "number"},
+        "candidate_id": {"type": "number"},
+    },
+    "required": ["id"]
+}
+user_PUT_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "name": {"type": "string"},
+        "email": {"type": "string"},
+        "password": {"type": "string"}
+    },
+    "required": ["id"]
+}
 
-## Init election types 
-# Where should this go?  This seems like a bad place
-def drop_tally_types():
-    try:
-        num_rows_deleted = session.query(
-            models.ElectionType).delete()
-        session.commit()
-        return num_rows_deleted
-    except Exception as e:
-        session.rollback()
+# ## Init election types 
+# # Where should this go?  This seems like a bad place
+# def drop_tally_types():
+#     try:
+#         num_rows_deleted = session.query(
+#             models.ElectionType).delete()
+#         session.commit()
+#         return num_rows_deleted
+#     except Exception as e:
+#         session.rollback()
 
-def init_tally_types():
-    try:
-        # BILL: What is this doing, or supposed to do?
-        wta = WinnerTakeAll.fetch()
-        proportional = Proportional()
-        schulze = Schulze()
-        session.add_all([wta, proportional, schulze])
-        session.commit()
-    except Exception as e:
-        session.rollback()
+# def init_tally_types():
+#     try:
+#         # BILL: What is this doing, or supposed to do?
+#         wta = WinnerTakeAll.fetch()
+#         proportional = Proportional()
+#         schulze = Schulze()
+#         session.add_all([wta, proportional, schulze])
+#         session.commit()
+#     except Exception as e:
+#         session.rollback()
 
 ### Assign electiontypes model
 # TODO: There has GOT to be a better way to do this
 def assign_election_type(elect_type):
+    """Assign ElectionTypes models"""
     if elect_type == "WTA":
         elect_type = WinnerTakeAll()
         return elect_type
@@ -135,11 +244,30 @@ def check_cand_id(cand_id):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
+def check_vote_id(vote_id):
+    vote = session.query(models.Vote).get(vote_id)
+    if not vote:
+        message = "Could not find vote with id {}".format(vote_id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
+def check_user_id(user_id):
+    user = session.query(models.User).get(user_id)
+    if not user:
+        message = "Could not find user with id {}".format(user_id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+
 
 ### Define the API endpoints
 ############################
 # GET endpoints
 ############################
+
+### NOTE: I really dislike the multiple endpoints with the 
+### parameters passed through the URL. Need to update to single 
+### endpoints, and require JSON header data to be passed for GET method
+
 
 @app.route("/api/elections", methods=["GET"])
 @decorators.accept("application/json")
@@ -427,7 +555,7 @@ def election_post():
 
     # Validate submitted header data, as json, against schema
     try:
-        validate(data, election_schema)
+        validate(data, election_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -462,7 +590,7 @@ def race_post():
 
     # Validate header data vs. schema
     try:
-        validate(data, race_schema)
+        validate(data, race_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -501,7 +629,7 @@ def candidate_post():
 
     # Validate header data vs. schema
     try:
-        validate(data, candidate_schema)
+        validate(data, candidate_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -541,7 +669,7 @@ def vote_post():
 
     # Validate header data vs. schema
     try:
-        validate(data, vote_schema)
+        validate(data, vote_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -589,7 +717,7 @@ def user_post():
 
     # Validate request JSON data vs schema
     try:
-        validate(data, user_schema)
+        validate(data, user_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -613,3 +741,150 @@ def user_post():
     # Update this to send them back to previous page before 
     headers = {"Location": url_for("elections_get")}
     return Response(data, 201, headers=headers, mimetype="application/json")
+
+
+############################
+# PUT endpoints
+############################
+
+@app.route("/api/elections", methods=["PUT"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def election_put():
+    """ Edits election """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, election_PUT_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_election_id(data["id"])
+
+    # Init Election object with id=data["id"]
+    election = session.query(models.Election).get(data["id"])
+
+    # Update target election
+    for key, value in data.items():
+        election[key] = value
+    session.commit()
+
+    data = json.dumps(election.as_dictionary())
+    headers = {"Location": url_for("election_get", id=election.id)}
+    return Response(data, 200, headers=headers, mimetype="application/json")
+
+@app.route("/api/races", methods=["PUT"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def race_put():
+    """ Edits race """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, race_PUT_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_race_id(data["id"])
+
+    # Init Race object with id=data["id"]
+    race = session.query(models.Race).get(data["id"])
+
+    # Update target race
+    for key, value in data.items():
+        race[key] = value
+    session.commit()
+
+    data = json.dumps(race.as_dictionary())
+    headers = {"Location": url_for("race_get", id=race.id)}
+    return Response(data, 200, headers=headers, mimetype="application/json")
+
+
+@app.route("/api/candidates", methods=["PUT"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def candidate_put():
+    """ Edits candidate """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, candidate_PUT_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_candidate_id(data["id"])
+
+    # Init Candidate object with id=data["id"]
+    candidate = session.query(models.Candidate).get(data["id"])
+
+    # Update target candidate
+    for key, value in data.items():
+        candidate[key] = value
+    session.commit()
+
+    data = json.dumps(candidate.as_dictionary())
+    headers = {"Location": url_for("candidate_get", id=candidate.id)}
+    return Response(data, 200, headers=headers, mimetype="application/json")
+
+@app.route("/api/votes", methods=["PUT"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def vote_put():
+    """ Edits vote """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, vote_PUT_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_vote_id(data["id"])
+
+    # Init Vote object with id=data["id"]
+    vote = session.query(models.Vote).get(data["id"])
+
+    # Update target vote
+    for key, value in data.items():
+        vote[key] = value
+    session.commit()
+
+    data = json.dumps(vote.as_dictionary())
+    headers = {"Location": url_for("vote_get", id=vote.id)}
+    return Response(data, 200, headers=headers, mimetype="application/json")
+
+@app.route("/api/users", methods=["PUT"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def user_put():
+    """ Edits user """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, user_PUT_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_user_id(data["id"])
+
+    # Init User object with id=data["id"]
+    user = session.query(models.User).get(data["id"])
+
+    # Update target user
+    for key, value in data.items():
+        user[key] = value
+    session.commit()
+
+    data = json.dumps(user.as_dictionary())
+    headers = {"Location": url_for("user_get", id=user.id)}
+    return Response(data, 200, headers=headers, mimetype="application/json")
+
