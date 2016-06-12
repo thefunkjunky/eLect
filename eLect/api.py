@@ -19,7 +19,7 @@ from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 user_GET_schema = {
     "type": "object",
     "properties": {
-        "id": {"type": "number"}
+        "id": {"type": "number"},
         "email": {"type": "string"}
     },
     "required": [] # How to require "id" OR "email"?
@@ -30,15 +30,16 @@ election_GET_schema = {
     "properties": {
         "id": {"type": "number"}
     },
-    "required": ["id"]
+    "required": []
 }
 
 race_GET_schema = {
     "type": "object",
     "properties": {
-        "id": {"type": "number"}
+        "id": {"type": "number"},
+        "elect_id", {"type": "number"}
     },
-    "required": ["id"]
+    "required": []
 }
 
 candidate_GET_schema = {
