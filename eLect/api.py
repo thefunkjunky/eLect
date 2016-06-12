@@ -14,7 +14,7 @@ from .database import session
 from eLect.utils import get_or_create
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
-# schemas for schema validation go here...
+### Schemas for schema validation go here...
 ### GET schemas
 #
 user_GET_schema = {
@@ -976,7 +976,7 @@ def election_delete():
     data = json.dumps({"message": message})
     headers = {"Location": url_for("elections_get")}
 
-    return Response(data, 204, headers=headers, mimetype="application/json")
+    return Response(data, 200, headers=headers, mimetype="application/json")
 
 @app.route("/api/races", methods=["DELETE"])
 @decorators.accept("application/json")
@@ -1006,7 +1006,7 @@ def race_delete():
     data = json.dumps({"message": message})
     headers = {"Location": url_for("election_get", data=election_data)}
 
-    return Response(data, 204, headers=headers, mimetype="application/json")
+    return Response(data, 200, headers=headers, mimetype="application/json")
 
 @app.route("/api/candidates", methods=["DELETE"])
 @decorators.accept("application/json")
@@ -1036,7 +1036,7 @@ def candidate_delete():
     data = json.dumps({"message": message})
     headers = {"Location": url_for("race_get", data=race_data)}
 
-    return Response(data, 204, headers=headers, mimetype="application/json")
+    return Response(data, 200, headers=headers, mimetype="application/json")
 
 @app.route("/api/votes", methods=["DELETE"])
 @decorators.accept("application/json")
@@ -1067,4 +1067,4 @@ def vote_delete():
     data = json.dumps({"message": message})
     headers = {"Location": url_for("race_get", data=race_data)}
 
-    return Response(data, 204, headers=headers, mimetype="application/json")
+    return Response(data, 200, headers=headers, mimetype="application/json")
