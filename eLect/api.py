@@ -16,6 +16,7 @@ from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 # schemas for schema validation go here...
 ### GET schemas
+#
 user_GET_schema = {
     "type": "object",
     "properties": {
@@ -45,20 +46,23 @@ race_GET_schema = {
 candidate_GET_schema = {
     "type": "object",
     "properties": {
-        "id": {"type": "number"}
+        "id": {"type": "number"},
+        "race_id": {"type": "number"},
     },
-    "required": ["id"]
+    "required": []
 }
 
 vote_GET_schema = {
     "type": "object",
     "properties": {
         "id": {"type": "number"}
+        "candidate_id": {"type": "number"}
     },
-    "required": ["id"]
+    "required": []
 }
 
 ### POST schemas
+#
 user_POST_schema = {
     "type": "object",
     "properties": {
@@ -121,6 +125,8 @@ vote_POST_schema = {
 }
 
 ### PUT schemas
+#
+
 election_PUT_schema = {
     "type": "object",
     "properties": {
@@ -186,6 +192,50 @@ user_PUT_schema = {
     },
     "required": ["id"]
 }
+
+### DELETE schemas
+#
+user_DELETE_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "email": {"type": "string"}
+    },
+    "required": []
+}
+
+election_DELETE_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
+race_DELETE_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+    },
+    "required": ["id"]
+}
+
+candidate_DELETE_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+    },
+    "required": ["id"]
+}
+
+vote_DELETE_schema = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"}
+    },
+    "required": ["id"]
+}
+
 
 # ## Init election types 
 # # Where should this go?  This seems like a bad place
@@ -265,7 +315,7 @@ def check_user_id(user_id):
 # GET endpoints
 ############################
 
-### NOTE: I really dislike the multiple endpoints with the 
+### TODO: I really dislike the multiple endpoints with the 
 ### parameters passed through the URL. Need to update to single 
 ### endpoints, and require JSON header data to be passed for GET method
 
@@ -889,3 +939,132 @@ def user_put():
     headers = {"Location": url_for("user_get", id=user.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
+############################
+# DELETE endpoints
+############################
+
+### NOTE about response codes re: DELETE method
+# 9.7 DELETE
+# A successful response SHOULD be 
+# 200 (OK) if the response includes an entity describing the status, 
+# 202 (Accepted) if the action has not yet been enacted, or 
+# 204 (No Content) if the action has been enacted but the response 
+# does not include an entity. 
+
+@app.route("/api/elections", methods=["DELETE"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def election_delete():
+    """ Deletes election """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, election_DELETE_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_election_id(data["id"])
+
+    # Deletes Election object with id=data["id"]
+    election = session.query(models.Election).get(data["id"])
+    session.delete(election)
+    session.commit()
+
+    message = "Deleted election id #{}".format(data["id"])
+    data = json.dumps({"message": message})
+    headers = {"Location": url_for("elections_get")}
+
+    return Response(data, 204, headers=headers, mimetype="application/json")
+
+@app.route("/api/races", methods=["DELETE"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def race_delete():
+    """ Deletes race """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, race_DELETE_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_race_id(data["id"])
+
+    # Deletes race object with id=data["id"]
+    race = session.query(models.Race).get(data["id"])
+    # Obtains parent election_id and creates JSON header data for subsequent redirect
+    election_data = json.dump({"id": race.election_id})
+    # Deletes race and commits
+    session.delete(race)
+    session.commit()
+
+    message = "Deleted race id #{}".format(data["id"])
+    data = json.dumps({"message": message})
+    headers = {"Location": url_for("election_get", data=election_data)}
+
+    return Response(data, 204, headers=headers, mimetype="application/json")
+
+@app.route("/api/candidates", methods=["DELETE"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def candidate_delete():
+    """ Deletes candidate """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, candidate_DELETE_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_candidate_id(data["id"])
+
+    # Deletes candidate object with id=data["id"]
+    candidate = session.query(models.Candidate).get(data["id"])
+    # Obtains parent race_id and creates JSON header data for subsequent redirect
+    race_data = json.dump({"id": candidate.race_id})
+    # Deletes candidate and commits
+    session.delete(candidate)
+    session.commit()
+
+    message = "Deleted candidate id #{}".format(data["id"])
+    data = json.dumps({"message": message})
+    headers = {"Location": url_for("race_get", data=race_data)}
+
+    return Response(data, 204, headers=headers, mimetype="application/json")
+
+@app.route("/api/votes", methods=["DELETE"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def vote_delete():
+    """ Deletes vote """
+    data = request.json
+
+    # Validate submitted header data, as json, against schema
+    try:
+        validate(data, vote_DELETE_schema)
+    except ValidationError as error:
+        data = {"message": error.message}
+        return Response(json.dumps(data), 422, mimetype="application/json")
+
+    check_vote_id(data["id"])
+
+    # Obtains vote object with id=data["id"]
+    vote = session.query(models.Vote).get(data["id"])
+    # Obtains parent race_id and creates JSON header data for subsequent redirect
+    race_id = vote.candidate.race_id
+    race_data = json.dump({"id": race_id})
+    # Deletes vote and commits
+    session.delete(vote)
+    session.commit()
+
+    message = "Deleted vote id #{}".format(data["id"])
+    data = json.dumps({"message": message})
+    headers = {"Location": url_for("race_get", data=race_data)}
+
+    return Response(data, 204, headers=headers, mimetype="application/json")

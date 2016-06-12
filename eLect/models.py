@@ -22,6 +22,8 @@ election_type_enum = ENUM(
     name="election_type",
     create_type=False)
 
+### Question: does it even make sense to use PostgreSQL TEXT type for fields which
+#   should be limited in the first place?
 
 class Election(Base):
     """ Election class scheme """
@@ -30,8 +32,8 @@ class Election(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
-    # start_date = Column(DateTime, default=datetime.datetime.utcnow())
-    # last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
     elect_open = Column(Boolean, default=True)
 
@@ -60,9 +62,9 @@ class Election(Base):
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
-        # "start_date": self.start_date,
+        "start_date": self.start_date,
         # "end_date": self.end_date,
-        # "last_modified": self.last_modified,
+        "last_modified": self.last_modified,
         "elect_open": self.elect_open,
         "default_election_type": self.default_election_type,
         "admin_id": self.admin_id,
@@ -78,6 +80,8 @@ class Race(Base):
     description_short = Column(Text)
     description_long = Column(Text)
     race_open = Column(Boolean, default=True)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
     # Foreign relationships
     election_id = Column(Integer, ForeignKey('election.id'))
@@ -118,6 +122,8 @@ class Race(Base):
         "description_long": self.description_long,
         "election_id": self.election_id,
         "election_type": self.election_type,
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
         }
         return race
 
@@ -129,6 +135,8 @@ class Candidate(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
     # Foreign relationships
     race_id = Column(Integer, ForeignKey('race.id'), nullable=False)
@@ -141,6 +149,8 @@ class Candidate(Base):
         "description_short": self.description_short,
         "description_long": self.description_long,
         "race_id": self.race_id,
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
         }
         return candidate
 
@@ -150,6 +160,8 @@ class Vote(Base):
     __tablename__ = "vote"
     id = Column(Integer, primary_key=True)
     value = Column(Integer, nullable=False, default=0)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     
     # Foreign relationships
     candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)
@@ -161,6 +173,8 @@ class Vote(Base):
         "value": self.value,
         "candidate_id": self.candidate_id,
         "user_id": self.user_id,
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
         }
         return vote
 
@@ -193,7 +207,9 @@ class Results(Base):
         "last_modified": self.last_modified,
         "race_id": self.race_id,
         "election_type": self.election_type,
-        "results": self.results
+        "results": self.results,
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
         }
 
 
@@ -206,6 +222,7 @@ class ElectionType(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
     def __init__(self, *args, **kwargs):
         """Things that need to be done on init, like delete duplicate entries"""
@@ -229,6 +246,7 @@ class ElectionType(Base):
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
+        "last_modified": self.last_modified,
         }
         return elect_type
 
@@ -259,6 +277,8 @@ class User(Base):
     name = Column(Text)
     email = Column(Text, unique = True)
     password = Column(Text)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow())
+    last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
     # Foreign relationships
     # registered_elections = relationship("Election", backref="registered_user")
@@ -272,5 +292,7 @@ class User(Base):
         "name": self.name,
         "email": self.email,
         "password": self.password
+        "start_date": self.start_date,
+        "last_modified": self.last_modified,
         }
         return user
