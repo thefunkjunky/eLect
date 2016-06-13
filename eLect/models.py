@@ -130,13 +130,8 @@ class Race(Base):
         print("cand_count top: ", cand_count)
         # Adjust for the fact that self.candidates isn't actually updated 
         # on append() when the validator and this method are run
-        if is_remove == True:
-            # cand_count -= 1
-            pass
-        elif is_remove == False:
+        if is_remove == False:
             cand_count += 1
-        print("cand_count: {}, value floor: {}, value ceiling: {}".format(
-            cand_count, self.min_vote_val, self.max_vote_val))
         # if less than 2 candidates found, assigns default values 
         if cand_count < 2:
             self.min_vote_val = 0
