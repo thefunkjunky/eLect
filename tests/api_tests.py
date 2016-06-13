@@ -623,9 +623,6 @@ class TestAPI(unittest.TestCase):
         """Test the race methods that automatically check and adjust 
         the min and max vote values for ranking type elections on update"""
         self.populate_database()
-        print("BEFORE: #cands: {}, min, max vote values: {},{}".format(
-            len(self.raceB.candidates), self.raceB.min_vote_val,
-            self.raceB.max_vote_val))
         self.assertEqual(len(self.raceB.candidates), 4)
         self.assertEqual(self.raceB.min_vote_val, 0)
         self.assertEqual(self.raceB.max_vote_val, 1)
@@ -635,22 +632,15 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(self.raceB.min_vote_val, 0)
         self.assertEqual(self.raceB.max_vote_val, 4)
 
-        print("list of candidates before append: ", 
-            [candidate.title for candidate in self.raceB.candidates])
         ### WHY DO THESE WORK:
         self.raceB.candidates.append(self.candidateAB)
         self.assertEqual(len(self.raceB.candidates), 5)
         self.assertEqual(self.raceB.min_vote_val, 0)
         self.assertEqual(self.raceB.max_vote_val, 5)
 
-        print("list of candidates after append: ", 
-            [candidate.title for candidate in self.raceB.candidates])
-
         self.raceB.max_vote_val = 1
         self.raceB.candidates.remove(self.candidateBD)
 
-        print("list of candidates after remove: ", 
-            [candidate.title for candidate in self.raceB.candidates])
         self.assertEqual(len(self.raceB.candidates), 4)
         self.assertEqual(self.raceB.min_vote_val, 0)
         self.assertEqual(self.raceB.max_vote_val, 4)
@@ -659,9 +649,6 @@ class TestAPI(unittest.TestCase):
         ### db/collection aren't handled by the validator event)
         # session.delete(self.candidateBD)
         # self.candidateAB.race_id = self.raceB.id
-        print("AFTER: #cands: {}, min, max vote values: {},{}".format(
-            len(self.raceB.candidates), self.raceB.min_vote_val,
-            self.raceB.max_vote_val))
 
         # self.assertEqual(0,1)
 
