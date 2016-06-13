@@ -317,7 +317,7 @@ def check_user_id(user_id):
 
 ### TODO: I really dislike the multiple endpoints with the 
 ### parameters passed through the URL. Need to update to single 
-### endpoints, and require JSON header data to be passed for GET method
+### endpoints, and require JSON header data to be passed with GET method
 
 
 @app.route("/api/elections", methods=["GET"])
@@ -711,7 +711,10 @@ def candidate_post():
 
     # Add the candidate to the database
     candidate = models.Candidate(**data)
-    session.add(candidate)
+    # session.add(candidate)
+    ### NOTE: appending candidate to race.candidates collection to trigger 
+    ### validator event
+    race.candidates.append(candidate)
     session.commit()
 
     # Return a 201 Created, containing the candidate as JSON and with the 
@@ -1036,9 +1039,13 @@ def candidate_delete():
     # Deletes candidate object with id=data["id"]
     candidate = session.query(models.Candidate).get(data["id"])
     # Obtains parent race_id and creates JSON header data for subsequent redirect
+    race = session.query(models.Race).get(candidate.race_id)
     race_data = json.dump({"id": candidate.race_id})
     # Deletes candidate and commits
-    session.delete(candidate)
+    # session.delete(candidate)
+    ### NOTE: deleteing from race.candidates collection to trigger
+    ### validator event
+    race.candidates.remove(candidate)
     session.commit()
 
     message = "Deleted candidate id #{}".format(data["id"])

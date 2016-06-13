@@ -2,6 +2,7 @@ import os.path
 import datetime
 
 from flask import url_for
+from flask.json import jsonify
 from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey, Enum, CheckConstraint, event
 from sqlalchemy.orm import relationship, validates, column_property, backref, configure_mappers
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
@@ -12,6 +13,7 @@ from sqlalchemy.dialects.postgresql import ENUM, JSONB
 
 from eLect.custom_exceptions import *
 from .database import Base, engine, session
+
 
 ### Define election type enum
 # (not sure if this is the best way to do this
@@ -100,8 +102,10 @@ class Race(Base):
         # so that I don't have to bother with the complexitity of initializing 
         # the fields of the model here (again)
         super(Race, self).__init__(*args, **kwargs)
+
         # unpacks the kwargs into a dict
         params = dict((k, v) for k, v in kwargs.items())
+
         # check to see if elect_id was passed, or an election object,
         # then initializes the parent election object accordingly, and
         # assigns race.election_type to parent election.default_election_type
@@ -116,41 +120,72 @@ class Race(Base):
             if self.election_type == None:
                 self.election_type = self.election.default_election_type
 
-    @hybrid_method
-    def check_n_fix_valuerange(self):
+
+    # @hybrid_method
+    def check_n_fix_valuerange(self, is_remove=None):
         """Checks min_vote_val and max_vote_value against len(candidates), 
         and changes them accordingly when certain erroneus conditions are 
         met"""
         cand_count = len(self.candidates)
+        print("cand_count top: ", cand_count)
+        # Adjust for the fact that self.candidates isn't actually updated 
+        # on append() when the validator and this method are run
+        if is_remove == True:
+            # cand_count -= 1
+            pass
+        elif is_remove == False:
+            cand_count += 1
         print("cand_count: {}, value floor: {}, value ceiling: {}".format(
             cand_count, self.min_vote_val, self.max_vote_val))
-        # if no candidates found, assigns default values 
-        if cand_count == 0:
+        # if less than 2 candidates found, assigns default values 
+        if cand_count < 2:
             self.min_vote_val = 0
-            self.max_vote_value = 1
-            pass
+            self.max_vote_val = 1
+            # pass
         # If min_vote_val is > max_vote_value, adjusts floor to ceiling-cand_count
-        elif self.min_vote_val > self.max_vote_val:
+        if self.min_vote_val > self.max_vote_val:
             self.min_vote_val = self.max_vote_value - cand_count
-            pass
+            # pass
         # range between floor and ceiling are < cand_count, adjust ceiling
         value_range = self.max_vote_val - self.min_vote_val
         if value_range < cand_count:
             self.max_vote_val = self.min_vote_val + cand_count
 
-    # @hybrid_method
-    # @staticmethod
-    # @event.listens_for(Race.candidates, 'append')
-    # @event.listens_for(Race.candidates, 'remove')
-    @validates('candidates', include_removes=True, raw=True)
-    def on_candidates_append_or_remove(self, key, candidate):
+    @validates('candidates', include_removes=True)
+    def on_candidates_append_or_remove(self, key, candidate, is_remove):
         """On append or remove events in candidates, and if election_type
         allows candidate rankings (e.g.: Schulze, IRV, etc),
         runs check_n_fix_valuerange() to ensure vote value range is functional"""
+
+        # Validation function isnt emitted by default if 
+        # candidate in candidates collection is removed.
+        # This forces shared code to be executed under both append 
+        # and delete events
+
+        # Event only works with list append() and remove() methods.
+        # Will not trigger with indirect changes to db/collection.
+
+        if is_remove or not is_remove:
+            ranking_types = ["Schulze"]
+            if self.election_type in ranking_types:
+                self.check_n_fix_valuerange(is_remove)
+        
+        # Returns the candidate if being appended
+        if not is_remove:
+            return candidate
+
+    # TODO: get this to run on min and max value changes as well, and consolidate
+    # all of these validators, if possible
+    @validates('election_type')
+    def validate_election_type(self, key, election_type):
+        """On update to election_type, and if election_type
+        allows candidate rankings (e.g.: Schulze, IRV, etc),
+        runs check_n_fix_valuerange() to ensure vote value range is functional"""
+
         ranking_types = ["Schulze"]
-        if self.election_type in ranking_types:
+        if election_type in ranking_types:
             self.check_n_fix_valuerange()
-        return candidate
+        return election_type
 
 
     def as_dictionary(self):
