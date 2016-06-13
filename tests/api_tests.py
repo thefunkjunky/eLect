@@ -16,7 +16,7 @@ from sqlalchemy.orm import aliased
 from eLect.main import app
 from eLect.custom_exceptions import *
 from eLect import models
-from eLect.utils import get_or_create, num_votes_cast
+from eLect import utils
 from eLect.database import Base, engine, session
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
@@ -617,6 +617,12 @@ class TestAPI(unittest.TestCase):
          "Election with id {} is currently closed, and not accepting new votes.".format(
             elect_id))
 
+    def test_race_max_vote_val_onupdate(self):
+        self.populate_database(election_type="Schulze")
+        print(self.raceA.max_vote_val)
+
+        self.assertEqual(0,1)
+
     def test_tally_WTA(self):
         """Test standard Winner-Take-All tallying"""
         self.populate_database()
@@ -651,7 +657,7 @@ class TestAPI(unittest.TestCase):
             self.voteB2])
         session.commit()
 
-        votes_cast = num_votes_cast(self.raceA.id)
+        votes_cast = utils.num_votes_cast(self.raceA.id)
         self.assertEqual(votes_cast, 3)
         # Close election
         self.electionA.elect_open = False
@@ -839,17 +845,17 @@ class TestAPI(unittest.TestCase):
         session.add(self.dbresults)
         session.commit()
 
-        print("results date", self.dbresults.start_date)
         # JSON doesn't allow dict keys as anything but strings, so 
         # the original model's keys must be converted for comparative
         # purposes
         print("results", self.dbresults.results)
-        final_result_keys_to_str = {str(key): value for key, value in final_result.items()}
+        final_result_keys_to_str = utils.dict_keys_to_str(final_result.items())
 
         self.assertEqual(final_result, {3:True, 4:False, 5:False, 6:False})
         self.assertEqual(self.dbresults.results, final_result_keys_to_str)
         self.assertEqual(self.dbresults.election_type, self.raceB.election_type)
-        self.assertEqual(1,0)
+        # self.assertEqual(1,0)
+
 
 
     def tearDown(self):

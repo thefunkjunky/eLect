@@ -11,7 +11,7 @@ from . import decorators
 from eLect.main import app
 from eLect.custom_exceptions import *
 from .database import session
-from eLect.utils import get_or_create
+from eLect.utils import get_or_create, json_serial
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
 
 ### Schemas for schema validation go here...
@@ -38,7 +38,7 @@ race_GET_schema = {
     "type": "object",
     "properties": {
         "id": {"type": "number"},
-        "elect_id", {"type": "number"}
+        "elect_id": {"type": "number"}
     },
     "required": []
 }
@@ -55,7 +55,7 @@ candidate_GET_schema = {
 vote_GET_schema = {
     "type": "object",
     "properties": {
-        "id": {"type": "number"}
+        "id": {"type": "number"},
         "candidate_id": {"type": "number"}
     },
     "required": []
@@ -324,6 +324,10 @@ def check_user_id(user_id):
 @decorators.accept("application/json")
 def elections_get():
     """ Returns a list of elections """
+
+    # TODO: how to paginate using API/JSON requests, WITHOUT
+    # loading every damn thing at once
+
     elections = session.query(models.Election)
     elections = elections.order_by(models.Election.id)
 
@@ -332,7 +336,8 @@ def elections_get():
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps([election.as_dictionary() for election in elections])
+    data = json.dumps([election.as_dictionary() for election in elections],
+        default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>", methods=["GET"])
@@ -347,7 +352,7 @@ def election_get(elect_id):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(election.as_dictionary())
+    data = json.dumps(election.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 
@@ -376,7 +381,8 @@ def races_get(elect_id = None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps([race.as_dictionary() for race in races])
+    data = json.dumps([race.as_dictionary() for race in races],
+        default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>", methods=["GET"])
@@ -397,7 +403,7 @@ def race_get(race_id, elect_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(race.as_dictionary())
+    data = json.dumps(race.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates",
@@ -425,7 +431,8 @@ def candidates_get(elect_id=None, race_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps([candidate.as_dictionary() for candidate in candidates])
+    data = json.dumps([candidate.as_dictionary() for candidate in candidates],
+        default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>", methods=["GET"])
@@ -449,7 +456,7 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(candidate.as_dictionary())
+    data = json.dumps(candidate.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes", 
@@ -481,7 +488,8 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps([vote.as_dictionary() for vote in votes])
+    data = json.dumps([vote.as_dictionary() for vote in votes],
+        default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes/<int:vote_id>", 
@@ -508,7 +516,7 @@ def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(vote.as_dictionary())
+    data = json.dumps(vote.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 
@@ -523,7 +531,7 @@ def user_get(user_id):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(user.as_dictionary())
+    data = json.dumps(user.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 
@@ -538,7 +546,8 @@ def types_get():
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps([elect_type.as_dictionary() for elect_type in elect_types])
+    data = json.dumps([elect_type.as_dictionary() for elect_type in elect_types],
+        default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/types/<type_enum>", methods=["GET"])
@@ -552,7 +561,7 @@ def type_get(type_enum):
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
-    data = json.dumps(elect_type.as_dictionary())
+    data = json.dumps(elect_type.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
 @app.route("/api/elections/<int:elect_id>/races/<int:race_id>/tally", methods=["GET"])
@@ -628,7 +637,7 @@ def election_post():
 
     # Return a 201 Created, containing the election as JSON and with the 
     # Location header set to the location of the election
-    data = json.dumps(election.as_dictionary())
+    data = json.dumps(election.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("election_get", elect_id=election.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
 
@@ -667,7 +676,7 @@ def race_post():
 
     # Return a 201 Created, containing the election as JSON and with the 
     # Location header set to the location of the election
-    data = json.dumps(race.as_dictionary())
+    data = json.dumps(race.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("race_get", race_id=race.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
 
@@ -707,7 +716,7 @@ def candidate_post():
 
     # Return a 201 Created, containing the candidate as JSON and with the 
     # Location header set to the location of the candidate
-    data = json.dumps(candidate.as_dictionary())
+    data = json.dumps(candidate.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("candidate_get", cand_id=candidate.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
 
@@ -755,7 +764,7 @@ def vote_post():
 
     # Return a 201 Created, containing the vote as JSON and with the 
     # Location header set to the location of the election
-    data = json.dumps(vote.as_dictionary())
+    data = json.dumps(vote.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("election_get", elect_id=candidate.race.election.id)}
     return Response(data, 201, headers=headers, mimetype="application/json")
 
@@ -788,7 +797,7 @@ def user_post():
     session.commit()
 
     # Return a 201 Created, 
-    data = json.dumps(user.as_dictionary())
+    data = json.dumps(user.as_dictionary(), default=json_serial)
     # Update this to send them back to previous page before 
     headers = {"Location": url_for("elections_get")}
     return Response(data, 201, headers=headers, mimetype="application/json")
@@ -822,7 +831,7 @@ def election_put():
         election[key] = value
     session.commit()
 
-    data = json.dumps(election.as_dictionary())
+    data = json.dumps(election.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("election_get", id=election.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
@@ -850,7 +859,7 @@ def race_put():
         race[key] = value
     session.commit()
 
-    data = json.dumps(race.as_dictionary())
+    data = json.dumps(race.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("race_get", id=race.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
@@ -879,7 +888,7 @@ def candidate_put():
         candidate[key] = value
     session.commit()
 
-    data = json.dumps(candidate.as_dictionary())
+    data = json.dumps(candidate.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("candidate_get", id=candidate.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
@@ -907,7 +916,7 @@ def vote_put():
         vote[key] = value
     session.commit()
 
-    data = json.dumps(vote.as_dictionary())
+    data = json.dumps(vote.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("vote_get", id=vote.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
@@ -935,7 +944,7 @@ def user_put():
         user[key] = value
     session.commit()
 
-    data = json.dumps(user.as_dictionary())
+    data = json.dumps(user.as_dictionary(), default=json_serial)
     headers = {"Location": url_for("user_get", id=user.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 

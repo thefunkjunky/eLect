@@ -1,4 +1,5 @@
 import os.path
+import datetime
 
 # from eLect.main import app
 from sqlalchemy.sql import func
@@ -25,3 +26,23 @@ def num_votes_cast(race_id):
             func.count(models.Vote.id)).filter(
             models.Vote.candidate.has(race_id = race_id)).all()[0][0] 
     return num_votes_cast
+
+def dict_keys_to_str(dict):
+    """Util to convert dictionary keys to strings"""
+    converted = {str(key): value for key, value in dict}
+    return converted
+
+def dict_keys_to_int(dict):
+    """Util to convert dictionary keys to integers"""
+    try:
+        converted = {int(key): value for key, value in dict}
+    except Exception as e:
+        return dict
+    return converted
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, datetime.datetime):
+        serial = obj.isoformat()
+        return serial
+    raise TypeError ("Type not serializable")
