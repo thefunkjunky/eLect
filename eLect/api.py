@@ -406,15 +406,12 @@ def race_get(race_id, elect_id=None):
     data = json.dumps(race.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates",
+@app.route("/api/races/<int:race_id>/candidates",
  methods=["GET"])
 @app.route("/api/candidates", methods=["GET"])
 @decorators.accept("application/json")
 def candidates_get(elect_id=None, race_id=None):
     """ Returns a list of candidates """
-    if elect_id:
-        # Check for election's existence
-        check_election_id(elect_id)
     if race_id:
         # Check for race's existence
         check_race_id(race_id)
@@ -435,16 +432,14 @@ def candidates_get(elect_id=None, race_id=None):
         default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>", methods=["GET"])
+@app.route("/api/races/<int:race_id>/candidates/<int:cand_id>", methods=["GET"])
 @app.route("/api/candidates/<int:cand_id>", methods=["GET"])
 @decorators.accept("application/json")
 def candidate_get(cand_id, elect_id=None, race_id=None):
     """ Returns information for a single candidate """
-    if elect_id: 
-        # Check for election's existence
-        check_election_id(elect_id)
+
+    # Check for race's existence
     if race_id:
-        # Check for race's existence
         check_race_id(race_id)
 
     # Find and check the candidate
@@ -459,19 +454,12 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
     data = json.dumps(candidate.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes", 
+@app.route("/api/candidates/<int:cand_id>/votes", 
     methods=["GET"])
 @app.route("/api/votes", methods=["GET"])
 @decorators.accept("application/json")
 def votes_get(elect_id=None, race_id=None, cand_id=None):
     """ Returns a list of votes cast """
-
-    if elect_id:
-        # Check for election's existence
-        check_election_id(elect_id)
-    if race_id:
-        # Check for race's existence
-        check_race_id(race_id)
     if cand_id:
         # Check for candidate's existence
         check_cand_id(cand_id)
@@ -492,18 +480,12 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
         default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
-@app.route("/api/elections/<int:elect_id>/races/<int:race_id>/candidates/<int:cand_id>/votes/<int:vote_id>", 
+@app.route("/api/candidates/<int:cand_id>/votes/<int:vote_id>", 
     methods=["GET"])
 @app.route("/api/votes/<int:vote_id>", methods=["GET"])
 @decorators.accept("application/json")
 def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
     """ Returns information regarding a vote cast """
-    if elect_id:
-        # Check for election's existence
-        check_election_id(elect_id)
-    if race_id:
-        # Check for race's existence
-        check_race_id(race_id)
     if cand_id:
         # Check for candidate's existence
         check_cand_id(cand_id)
