@@ -619,7 +619,7 @@ class TestAPI(unittest.TestCase):
          "Election with id {} is currently closed, and not accepting new votes.".format(
             elect_id))
 
-    def test_race_max_vote_val_onupdate(self):
+    def test_race_voteval_check(self):
         """Test the race methods that automatically check and adjust 
         the min and max vote values for ranking type elections on update"""
         self.populate_database()
@@ -638,8 +638,10 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(self.raceB.min_vote_val, 0)
         self.assertEqual(self.raceB.max_vote_val, 5)
 
-        self.raceB.max_vote_val = 1
         self.raceB.candidates.remove(self.candidateBD)
+        # Throw a couple of wrenches in the works
+        self.raceB.max_vote_val = 1
+        self.raceB.min_vote_val = 7
 
         self.assertEqual(len(self.raceB.candidates), 4)
         self.assertEqual(self.raceB.min_vote_val, 0)
@@ -650,7 +652,6 @@ class TestAPI(unittest.TestCase):
         # session.delete(self.candidateBD)
         # self.candidateAB.race_id = self.raceB.id
 
-        # self.assertEqual(0,1)
 
     def test_tally_WTA(self):
         """Test standard Winner-Take-All tallying"""

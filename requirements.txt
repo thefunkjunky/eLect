@@ -7,3 +7,5 @@ itsdangerous
 jsonschema
 nose
 psycopg2
+ethereum-serpent
+ethereum

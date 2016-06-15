@@ -77,13 +77,16 @@ class Election(Base):
 class Race(Base):
     """ Race class scheme """
     __tablename__ = "race"
+    # list of election types that allow candidate ranking
+    _ranking_types = ["Schulze"]
     id = Column(Integer, primary_key=True)
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
     race_open = Column(Boolean, default=True)
-    min_vote_val = Column(Integer, default=0)
-    max_vote_val = Column(Integer, default=1)
+    # Needs the _ to differentiate from the hybrid property
+    _min_vote_val = Column(Integer, default=0)
+    _max_vote_val = Column(Integer, default=1)
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
@@ -94,6 +97,8 @@ class Race(Base):
         default=None)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
     results = relationship("Results", backref="race", cascade="all, delete-orphan")
+
+
 
     def __init__(self, *args, **kwargs):
         """Things that need to be done on init, like assign election_type"""
@@ -120,31 +125,26 @@ class Race(Base):
             if self.election_type == None:
                 self.election_type = self.election.default_election_type
 
-
-    # @hybrid_method
     def check_n_fix_valuerange(self, is_remove=None):
-        """Checks min_vote_val and max_vote_value against len(candidates), 
+        """Checks _min_vote_val and _max_vote_value against len(candidates), 
         and changes them accordingly when certain erroneus conditions are 
         met"""
         cand_count = len(self.candidates)
-        print("cand_count top: ", cand_count)
         # Adjust for the fact that self.candidates isn't actually updated 
         # on append() when the validator and this method are run
         if is_remove == False:
             cand_count += 1
         # if less than 2 candidates found, assigns default values 
         if cand_count < 2:
-            self.min_vote_val = 0
-            self.max_vote_val = 1
-            # pass
-        # If min_vote_val is > max_vote_value, adjusts floor to ceiling-cand_count
-        if self.min_vote_val > self.max_vote_val:
-            self.min_vote_val = self.max_vote_value - cand_count
-            # pass
+            self._min_vote_val = 0
+            self._max_vote_val = 1
+        # If _min_vote_val is > _max_vote_value, adjusts floor to ceiling-cand_count
+        if self._min_vote_val > self._max_vote_val:
+            self._min_vote_val = self._max_vote_val - cand_count
         # range between floor and ceiling are < cand_count, adjust ceiling
-        value_range = self.max_vote_val - self.min_vote_val
+        value_range = self._max_vote_val - self._min_vote_val
         if value_range < cand_count:
-            self.max_vote_val = self.min_vote_val + cand_count
+            self._max_vote_val = self._min_vote_val + cand_count
 
     @validates('candidates', include_removes=True)
     def on_candidates_append_or_remove(self, key, candidate, is_remove):
@@ -161,16 +161,13 @@ class Race(Base):
         # Will not trigger with indirect changes to db/collection.
 
         if is_remove or not is_remove:
-            ranking_types = ["Schulze"]
-            if self.election_type in ranking_types:
+            if self.election_type in self._ranking_types:
                 self.check_n_fix_valuerange(is_remove)
-        
+
         # Returns the candidate if being appended
         if not is_remove:
             return candidate
 
-    # TODO: get this to run on min and max value changes as well, and consolidate
-    # all of these validators, if possible
     @validates('election_type')
     def validate_election_type(self, key, election_type):
         """On update to election_type, and if election_type
@@ -178,9 +175,47 @@ class Race(Base):
         runs check_n_fix_valuerange() to ensure vote value range is functional"""
 
         ranking_types = ["Schulze"]
-        if election_type in ranking_types:
+        if election_type in self._ranking_types:
             self.check_n_fix_valuerange()
+        else:
+            self._min_vote_val = 0
+            self._max_vote_val = 1
         return election_type
+
+    # Hybrid properties and setters needed to run 
+    # check_n_fix_valuerange whenever min or max vote values are set.
+    # Did not use @validators here, because the values need to be set 
+    # BEFORE the check is run
+    @hybrid_property
+    def min_vote_val(self):
+        """Returns the minimum vote value available for a race"""
+        return self._min_vote_val
+
+    @min_vote_val.setter
+    def min_vote_val(self, value):
+        """Sets the minimum vote value available for a race"""
+        if self.election_type in self._ranking_types:
+            self._min_vote_val = value
+            self.check_n_fix_valuerange()
+        else:
+            self._min_vote_val = 0
+            self._max_vote_val = 1
+
+    @hybrid_property
+    def max_vote_val(self):
+        """Returns the maximum vote value available for a race"""
+        return self._max_vote_val
+
+    @max_vote_val.setter
+    def max_vote_val(self, value):
+        """Sets the maximum vote value available for a race"""
+        if self.election_type in self._ranking_types:
+            self._max_vote_val = value
+            self.check_n_fix_valuerange()
+        else:
+            self._min_vote_val = 0
+            self._max_vote_val = 1
+
 
 
     def as_dictionary(self):
@@ -281,7 +316,6 @@ class Results(Base):
         "start_date": self.start_date,
         "last_modified": self.last_modified,
         }
-
 
 class ElectionType(Base):
     """ Election Type class scheme """
