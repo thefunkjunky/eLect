@@ -131,7 +131,7 @@ class Schulze(ElectionType):
         "prevents ties and eliminates the need for recounts, among many other advantages.\n"\
         "The best option for races with 3 or more candidates, that must end with a single winner."
 
-    @hybrid_method
+    # @hybrid_method
     def gen_pair_results(self, race):
         """Method required by Schulze tally_race() that generates 
         dict of key:value pairs, defined as 

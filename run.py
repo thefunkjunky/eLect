@@ -1,5 +1,5 @@
 import os
-from eLect import app
+from eLect.main import app
 
 def run():
     port = int(os.environ.get('PORT', 8080))

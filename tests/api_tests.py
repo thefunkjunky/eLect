@@ -178,8 +178,8 @@ class TestAPI(unittest.TestCase):
         response = self.client.get("/api/candidates/{}".format(self.candidateBB.id),
             headers=[("Accept", "application/json")])
         longURL_response = self.client.get(
-            "/api/elections/{}/races/{}/candidates/{}".format(
-                self.electionA.id, self.raceB.id, self.candidateBB.id),
+            "/api/races/{}/candidates/{}".format(
+                self.raceB.id, self.candidateBB.id),
             headers=[("Accept", "application/json")])
 
         self.assertEqual(response.status_code, 200)

@@ -1,6 +1,6 @@
 from flask import render_template
 
-from eLect import app
+from eLect.main import app
 
 @app.route("/")
 def index():
