@@ -137,8 +137,9 @@ h4 {
     display: flex;
     flex-flow: row wrap;
     /*flex: 1 0 auto;*/
-    padding: 5px;
-    /*margin: 10px;*/
+    padding: 0px;
+    padding-left: 5px;
+    margin: 0px;
     /*align-self: left;*/
     list-style: none;
     /*justify-content: space-around;*/
@@ -151,7 +152,7 @@ a.button:link, a.button:visited {
     background-color: #698F3F;
     color: #E7DECD;
     padding: 3px;
-    margin: 5px;
+    margin: 3px;
     /*margin-top: 20px;*/
     /*text-align: center;*/
     text-decoration: none;
