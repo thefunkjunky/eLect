@@ -197,12 +197,16 @@ a.button:hover, a.button:active {
     /*flex-direction: column;*/
 }
 
-.item-title {
+a.item-title {
     text-decoration: none;
     color: #E7DECD;
     padding-left: 5px;
     margin: 3px;
     font-size: 117%;
+}
+
+a.item-title:hover {
+    opacity:0.5;
 }
 
 .item-short-descr {
