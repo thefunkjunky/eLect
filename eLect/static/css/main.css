@@ -144,11 +144,14 @@ h4 {
 }
 
 a.button:link, a.button:visited {
-    flex: 1 0 auto;
+    /*flex: 1 0 auto;*/
+    /*position: relative;*/
+    display: block;
     background-color: #698F3F;
     color: #E7DECD;
-    padding: 5px;
-    margin: 3px;
+    padding: 3px;
+    margin: 5px;
+    /*margin-top: 20px;*/
     /*text-align: center;*/
     text-decoration: none;
     border: 2px solid #E7DECD;
@@ -165,21 +168,29 @@ a.button:hover, a.button:active {
     align-items: center;
     background-color: #804E49;
     list-style: none;
+    overflow-y: scroll;
     border: 2px solid #E7DECD;
+    max-height: 300px;
 }
 
 .response-item {
     /*flex: 1;*/
+    display: flex;
+    flex-direction: row;
     /*margin-left: 24px;*/
     padding: 8px;
     /*margin: 10px;*/
     max-width: 500px;
 }
 .avatar-small {
-    flex: 0 0 96px;
-    width: 96px;
-    height: 96px;
+    flex: 0 0 80px;
+    width: 80px;
+    height: 80px;
     background-color: #e7e7e7;
+}
+
+.item-text {
+    /*flex-direction: column;*/
 }
 
 .item-title {
