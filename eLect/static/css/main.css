@@ -99,6 +99,7 @@ h4 {
     align-items: center;
     /*align-content: center;*/
     background: black;
+    min-width: 400px;
 }
 
 .cur-view-workspace {
@@ -107,10 +108,10 @@ h4 {
     justify-content: center;*/
     /*align-content: center;*/
     /*flex-wrap: wrap;*/
-    /*flex: 1;*/
+    flex: 1;
     background-color: #2b2f51;
     /*padding: 50px;*/
-    margin: 30px;
+    margin: 20px;
     /*max-width: 600px;*/
 }
 
@@ -165,11 +166,13 @@ a.button:hover, a.button:active {
 .view-responses {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /*align-items: center;*/
     background-color: #804E49;
     list-style: none;
     overflow-y: scroll;
     border: 2px solid #E7DECD;
+    margin: 0px;
+    padding-left: 8px;
     max-height: 300px;
 }
 
@@ -180,7 +183,7 @@ a.button:hover, a.button:active {
     /*margin-left: 24px;*/
     padding: 8px;
     /*margin: 10px;*/
-    max-width: 500px;
+    max-width: 600px;
 }
 .avatar-small {
     flex: 0 0 80px;
@@ -203,5 +206,26 @@ a.button:hover, a.button:active {
 
 .item-short-descr {
     padding-left: 15px;
+    margin: 3px;
+}
+
+.item-action {
+    flex: 0 0 120px;
+    width: 120px;
+    height: 80px;
+    background: #a6908d;
+    align-self: center;
+}
+
+.bottom-buttons {
+    justify-content: flex-end;
+    /*padding: 1px;*/
+    margin: 0px;
+    /*align-self: right;*/
+}
+
+a.bottom-button:link, a.bottom-button:visited {
+    /*align-self: right;*/
+    padding: 3px;
     margin: 3px;
 }
