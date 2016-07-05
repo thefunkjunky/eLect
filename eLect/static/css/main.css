@@ -9,22 +9,31 @@ body {
 }
 
 p {
+    font-family: 'Gentium Book Basic', serif;
     font-size: 75%
 }
 
+a {
+    font-family: 'PT Mono', monospace;
+}
+
 h1 {
+    font-family: 'Raleway', sans-serif;
     font-size: 200%;
 }
 
 h2 {
+    font-family: 'Raleway', sans-serif;
     font-size: 150%;
 }
 
 h3 {
+    font-family: 'Raleway', sans-serif;
     font-size: 117%;
 }
 
 h4 {
+    font-family: 'Raleway', sans-serif;
     font-size: 100%;
 }
 
@@ -124,8 +133,15 @@ h4 {
 
 .view-title {
     align-self: center;
-    /*margin: 10px;*/
+    margin: 8px;
     border-bottom: 1px solid #FBFAF8;
+}
+
+.view-description {
+    flex: 1;
+    flex-wrap: true;
+    align-self: center;
+    margin: 8px;
 }
 
 .view-actions {
@@ -170,11 +186,11 @@ a.button:hover, a.button:active {
     /*align-items: center;*/
     background-color: #804E49;
     list-style: none;
-    overflow-y: scroll;
+    /*overflow-y: scroll;*/
     border: 2px solid #E7DECD;
-    margin: 0px;
+    margin: 8px;
     padding-left: 8px;
-    max-height: 300px;
+    /*max-height: 500px;*/
 }
 
 .response-item {

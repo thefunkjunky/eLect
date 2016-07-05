@@ -7,6 +7,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>eLect</title>
+    <!-- fonts -->
+    <style>
+    @import 'https://fonts.googleapis.com/css?family=Gentium+Book+Basic|Open+Sans|PT+Mono|Raleway';
+    </style> 
     <!-- main.css -->
     <link rel="stylesheet" href="static/css/main.css">
     <!-- jquery -->
@@ -24,15 +28,16 @@
         <h1 class="site-title">eLect</h1>
     </div>
     <span class="main-nav-bar">
-        <li><a href="#" class="nav-link">Elections</a> </li>
-        <li><a href="#" class="nav-link">Races</a></li>
-        <li><a href="#" class="nav-link">Candidates</a> </li>
-        <li><a href="#" class="nav-link">Vote</a></li>
+        <li><a href="#" class="nav-link" id="nav-elections">Elections</a> </li>
+        <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
+        <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a> </li>
+        <!-- <li><a href="#" class="nav-link" id="nav-vote">Vote</a></li> -->
     </span>
     <div class="body-window">
         <div class="cur-view-workspace">
             <div class="title-bar view-title-bar">
-                <h2 class="view-title">Current View Title</h2>
+                <h2 class="view-title" id="view-title">Current View Title</h2>
+                <p class="view-description" id="view-description">View description something something something someting something</p>
             </div>
             <div class="view-actions">
                 <ul class="action-buttons-nav">
@@ -90,7 +95,7 @@
     </div>
 
 
-    
+
 </body>
 
 </html>
