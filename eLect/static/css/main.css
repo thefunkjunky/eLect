@@ -5,12 +5,12 @@ https://coolors.co/0a122a-698f3f-e7decd-804e49-69a73f
 
 body {
     background-color: #2b2f51;
-    font-size: 75%;
+    font-size: 16px;
 }
 
 p {
     font-family: 'Gentium Book Basic', serif;
-    font-size: 75%
+    font-size: 100%
 }
 
 a {
@@ -65,7 +65,7 @@ h4 {
     margin: 20px;
     color: white;
     background: #a6908d;
-    border: 4px solid #c2e1f5;
+    border: 2px solid #c2e1f5;
     display: block;
 }
 
@@ -83,15 +83,15 @@ h4 {
 .main-nav-bar a:before {
     border-color: rgba(194, 225, 245, 0);
     border-left-color: #c2e1f5;
-    border-width: 23px;
-    margin-top: -23px;
+    border-width: 8px;
+    margin-top: -8px;
 }
 
 .main-nav-bar a:after {
     border-color: rgba(192, 185, 187, 0);
     border-left-color: #a6908d;
-    border-width: 17px;
-    margin-top: -17px;
+    border-width: 5px;
+    margin-top: -5px;
 }
 
 
@@ -104,14 +104,17 @@ h4 {
 .body-window {
     display: flex;
     flex-direction: column;
-    /*justify-content: center;*/
+    justify-content: center;
     align-items: center;
     /*align-content: center;*/
     background: black;
-    min-width: 400px;
+    min-width: 90%;
 }
 
 .cur-view-workspace {
+    /**/
+    /*how to prevent workspace window from moving outside of parent border?*/
+    /**/
     /*display: flex;
     flex-direction: column;
     justify-content: center;*/
@@ -119,9 +122,11 @@ h4 {
     /*flex-wrap: wrap;*/
     flex: 1;
     background-color: #2b2f51;
-    /*padding: 50px;*/
+    /*padding: 20px;*/
     margin: 20px;
     /*max-width: 600px;*/
+    min-width: 90%;
+    height: 90%;
 }
 
 .view-title-bar {
@@ -181,26 +186,38 @@ a.button:hover, a.button:active {
 }
 
 .view-responses {
-    display: flex;
-    flex-direction: column;
-    /*align-items: center;*/
+    /*display: flex;*/
+    flex: 1;
+    /*flex-direction: column;*/
     background-color: #804E49;
     list-style: none;
     /*overflow-y: scroll;*/
     border: 2px solid #E7DECD;
-    margin: 8px;
+    margin: 10px;
     padding-left: 8px;
     /*max-height: 500px;*/
+    /*width: 90%;*/
+    min-width: 70%;
+    /*align-content: center;*/
+    /*justify-content: center;*/
+    /*align-items: center;*/
+    /*align-self: center;*/
+    /*alignment-baseline: center;*/
 }
 
 .response-item {
-    /*flex: 1;*/
+    flex: 1;
     display: flex;
     flex-direction: row;
+    flex-wrap: true;
+    /*align-content: center;*/
+    /*align-self: center;*/
     /*margin-left: 24px;*/
     padding: 8px;
     /*margin: 10px;*/
-    max-width: 600px;
+    /*max-width: 800px;*/
+    /*align-items: flex-end;*/
+    min-width: 50%;
 }
 .avatar-small {
     flex: 0 0 80px;
@@ -210,10 +227,12 @@ a.button:hover, a.button:active {
 }
 
 .item-text {
+    flex: 1;
     /*flex-direction: column;*/
 }
 
 a.item-title {
+    flex: 1;
     text-decoration: none;
     color: #E7DECD;
     padding-left: 5px;
@@ -231,17 +250,18 @@ a.item-title:hover {
 }
 
 .item-action {
-    flex: 0 0 120px;
-    width: 120px;
-    height: 80px;
+    flex: 0 1 120px;
+    width: 80px;
+    height: 50px;
     background: #a6908d;
     align-self: center;
+    /*flex-wrap: true;*/
 }
 
 .bottom-buttons {
     justify-content: flex-end;
     /*padding: 1px;*/
-    margin: 0px;
+    margin: 5px;
     /*align-self: right;*/
 }
 
