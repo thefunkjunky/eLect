@@ -95,14 +95,15 @@ eLect.prototype.onElectionsButtonClicked = function(event) {
 
 eLect.prototype.onItemClicked = function(event) {
     var item = $(event.target);
+    category = item.attr("category");
     console.log(item);
-    if (item.category == "election") {
+    if (category == "election") {
         var url = '/api/elections/' + item.attr("data-id") + '/races';
         console.log(url);
         var objectURL = '/api/elections/' + item.attr("data-id");
     };
-    this.getObject(item.category, url);
-    this.getResponseList(item.category, url);
+    this.getObject(category, objectURL);
+    // this.getResponseList(category, url);
 };
 
 eLect.prototype.getObject = function(category, url) {
@@ -110,11 +111,12 @@ eLect.prototype.getObject = function(category, url) {
         type: 'GET',
         dataType: 'json'
     });
-    ajax.done(this.onGetObjectDone.bind(this));
+    ajax.done(this.onGetObjectDone.bind(this, category));
     ajax.fail(this.onFail.bind(this, "Getting parent object information"));
 };
 
-eLect.prototype.onGetObjectDone = function(data, category) {
+eLect.prototype.onGetObjectDone = function(category, data) {
+    console.log(category);
     if (category == "election"){
         this.election = data;
         console.log(this.election);
