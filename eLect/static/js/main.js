@@ -17,8 +17,8 @@ var eLect = function() {
     this.viewTitle = $("#view-title");
     this.viewDescription = $("#view-description");
 
-    $("#item-title").on("click", "#item-title",
-        this.onItemClicked.bind(this));
+    // $("#item-title").on("click", "#item-title",
+    //     this.onItemClicked.bind(this));
 
     // this.get_elections();
     this.updateNavBar();
@@ -39,6 +39,9 @@ eLect.prototype.navBarBehavior = function() {
     // this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
     this.navCandidate = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
+
+    this.itemTitleLink = $("#item-title");
+    this.itemTitleLink.click(this.onItemClicked.bind(this))
 
 };
 
@@ -92,6 +95,7 @@ eLect.prototype.onElectionsButtonClicked = function(event) {
 
 eLect.prototype.onItemClicked = function(event) {
     var item = $(event.target);
+    console.log(item);
     if (item.category == "election") {
         var url = '/api/elections/' + item.attr("data-id") + '/races';
         console.log(url);
@@ -123,13 +127,25 @@ eLect.prototype.getResponseList = function(category, url) {
         type: 'GET',
         dataType: 'json'
     });
-    ajax.done(this.onGetResponsesDone.bind(this));
+    ajax.done(this.onGetResponsesDone.bind(this, category));
     ajax.fail(this.onFail.bind(this, "Getting responses information"));
 };
 
-eLect.prototype.onGetResponsesDone = function(data, category) {
-    data.category = category;
+eLect.prototype.onGetResponsesDone = function(category, data) {
     this.responses = data;
+    for (i in this.responses) {
+        this.responses[i].category = category;
+    }
+    // var categoryList = {
+    //     category: category
+    // };
+    // console.log(categoryList);
+    // this.responses = $(this.responses).map(function(obj) {
+    //     $.extend(this.responses, category);
+    // });
+    // this.responses = $.merge(responses, categoryList);
+
+
     console.log(this.responses);
     this.updateViewItems();
     this.updateNavBar();
