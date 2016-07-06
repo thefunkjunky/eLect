@@ -4,7 +4,7 @@ var eLect = function() {
     this.candidate = null;
 
     this.navBarBehavior();
-    
+
     this.mainNavBar = $("#nav-bar");
     this.navbarSource = $("#main-nav-bar-template").html();
     this.navbarTemplate = Handlebars.compile(this.navbarSource);
@@ -17,7 +17,7 @@ var eLect = function() {
     this.viewTitle = $("#view-title");
     this.viewDescription = $("#view-description");
 
-    $("#responses").on("click", "#item-title",
+    $("#item-title").on("click", "#item-title",
         this.onItemClicked.bind(this));
 
     // this.get_elections();
@@ -48,7 +48,7 @@ eLect.prototype.updateNavBar = function() {
     candidate = this.candidate;
     var context = {election:election, race:race, candidate:candidate};
     console.log(context);
-    var mainNavBar = this.navbarTemplate(context);
+    var mainNavBar = $(this.navbarTemplate(context));
     this.mainNavBar.replaceWith(mainNavBar);
     this.mainNavBar = mainNavBar;
     if (!election) {
