@@ -40,8 +40,12 @@ eLect.prototype.navBarBehavior = function() {
     this.navCandidate = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
-    this.itemTitleLink = $("#item-title");
-    this.itemTitleLink.click(this.onItemClicked.bind(this))
+    this.itemTitleLink = $(".item-title");
+    this.itemTitleLink.click(this.onItemClicked.bind(this));
+
+    // console.log($("#responses"));
+    // $("#responses").on("click", ".item-title",
+    //     this.onItemClicked.bind(this));
 
 };
 
@@ -103,7 +107,7 @@ eLect.prototype.onItemClicked = function(event) {
         var objectURL = '/api/elections/' + item.attr("data-id");
     };
     this.getObject(category, objectURL);
-    // this.getResponseList(category, url);
+    this.getResponseList(category, url);
 };
 
 eLect.prototype.getObject = function(category, url) {

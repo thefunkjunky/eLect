@@ -380,7 +380,7 @@ def races_get(elect_id = None):
         # what is the difference between .filter(SQL expressions),
         # and .filter_by(keyword expressions)?
         races = session.query(models.Race).filter(
-            Race.election_id == elect_id)
+            models.Race.election_id == elect_id)
     else:
         races = session.query(models.Race)
 
