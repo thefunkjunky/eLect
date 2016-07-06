@@ -14,11 +14,12 @@ var eLect = function() {
     // this.candidatesButton = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
-    this.navbarTemplate = Handlebars.compile($("#main-nav-bar-template").html());
+    this.navbarSource = $("#main-nav-bar-template").html();
+    this.navbarTemplate = Handlebars.compile(this.navbarSource);
 
     this.responseList = $("#response-list");
     this.responseSource = $("#response-item-template").html();
-    this.responseListTemplate = Handlebars.compile(responseSource);
+    this.responseListTemplate = Handlebars.compile(this.responseSource);
     this.responses = [];
 
     this.viewTitle = $("#view-title");
