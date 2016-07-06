@@ -247,7 +247,7 @@ a.button:hover, a.button:active {
 }
 
 a#item-title {
-    flex: 1;
+    /*flex: 1;*/
     text-decoration: none;
     color: #E7DECD;
     padding-left: 5px;

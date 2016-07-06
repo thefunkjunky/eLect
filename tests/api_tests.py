@@ -64,11 +64,13 @@ class TestAPI(unittest.TestCase):
 
         self.electionA = models.Election(
             title = "Election A",
+            description_short = "Election A Short description blah blah blah",
             admin_id = self.userA.id,
             default_election_type = election_type
             )
         self.electionB = models.Election(
             title = "Election B",
+            description_short = "Election B Short description blah blah blah",
             admin_id = self.userB.id,
             default_election_type = election_type
             )
