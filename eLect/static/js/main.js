@@ -1,21 +1,11 @@
 var eLect = function() {
-    // console.log(Handlebars.compile);
-    // console.dir(Handlebars);
-    this.electionsButton = $("#nav-elections");
-    this.electionsButton.click(this.onElectionsButtonClicked.bind(this));
-    // this.electionsButton = $("#nav-election");
-    // this.electionsButton.click(this.onElectionButtonClicked.bind(this));
+    this.election = null;
+    this.race = null;
+    this.candidate = null;
 
-    // this.racesButton = $("#nav-races");
-    // this.racesButton.click(this.onRacesButtonClicked.bind(this));
-    // this.racesButton = $("#nav-race");
-    // this.racesButton.click(this.onRaceButtonClicked.bind(this));
-
-    // this.candidatesButton = $("#nav-candidates");
-    // this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
-    // this.candidatesButton = $("#nav-candidate");
-    // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
-
+    this.navBarBehavior();
+    
+    this.mainNavBar = $("#nav-bar");
     this.navbarSource = $("#main-nav-bar-template").html();
     this.navbarTemplate = Handlebars.compile(this.navbarSource);
 
@@ -31,39 +21,125 @@ var eLect = function() {
         this.onItemClicked.bind(this));
 
     // this.get_elections();
+    this.updateNavBar();
+};
+
+eLect.prototype.navBarBehavior = function() {
+    this.electionsButton = $("#nav-elections");
+    this.electionsButton.click(this.onElectionsButtonClicked.bind(this));
+    this.navElection = $("#nav-election");
+    // this.electionsButton.click(this.onElectionButtonClicked.bind(this));
+
+    this.racesButton = $("#nav-races");
+    // this.racesButton.click(this.onRacesButtonClicked.bind(this));
+    this.navRace = $("#nav-race");
+    // this.racesButton.click(this.onRaceButtonClicked.bind(this));
+
+    this.candidatesButton = $("#nav-candidates");
+    // this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
+    this.navCandidate = $("#nav-candidate");
+    // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
+
+};
+
+eLect.prototype.updateNavBar = function() {
+    election = this.election;
+    race = this.race;
+    candidate = this.candidate;
+    var context = {election:election, race:race, candidate:candidate};
+    console.log(context);
+    var mainNavBar = this.navbarTemplate(context);
+    this.mainNavBar.replaceWith(mainNavBar);
+    this.mainNavBar = mainNavBar;
+    if (!election) {
+        this.electionsButton.show();
+        this.navElection.hide();
+        this.racesButton.hide();
+        this.navRace.hide();
+        this.candidatesButton.hide();
+        this.navCandidate.hide();
+    } else if (election) {
+        this.electionsButton.show();
+        this.navElection.show();
+        this.racesButton.show();
+        this.navRace.hide();
+        this.candidatesButton.hide();
+        this.navCandidate.hide();
+    } else if (race) {
+        this.electionsButton.show();
+        this.navElection.show();
+        this.racesButton.show();
+        this.navRace.show();
+        this.candidatesButton.show();
+        this.navCandidate.hide();
+    } else if (candidate) {
+        this.electionsButton.show();
+        this.navElection.show();
+        this.racesButton.show();
+        this.navRace.show();
+        this.candidatesButton.show();
+        this.navCandidate.show();
+    };
+    this.navBarBehavior();
 };
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
-    this.get_elections();
+    var category = "election";
+    var url = "/api/elections";
+    this.getResponseList(category, url);
 };
+
 
 eLect.prototype.onItemClicked = function(event) {
     var item = $(event.target);
+    if (item.category == "election") {
+        var url = '/api/elections/' + item.attr("data-id") + '/races';
+        console.log(url);
+        var objectURL = '/api/elections/' + item.attr("data-id");
+    };
+    this.getObject(item.category, url);
+    this.getResponseList(item.category, url);
 };
 
-eLect.prototype.get_elections = function() {
-    var ajax = $.ajax('/api/elections', {
+eLect.prototype.getObject = function(category, url) {
+    var ajax = $.ajax(url, {
         type: 'GET',
         dataType: 'json'
     });
-    ajax.done(this.onGetElectionsDone.bind(this));
-    ajax.fail(this.onFail.bind(this, "Getting elections information"));
+    ajax.done(this.onGetObjectDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "Getting parent object information"));
 };
 
-eLect.prototype.onGetElectionsDone = function(data) {
+eLect.prototype.onGetObjectDone = function(data, category) {
+    if (category == "election"){
+        this.election = data;
+        console.log(this.election);
+    };
+};
+
+
+eLect.prototype.getResponseList = function(category, url) {
+    var ajax = $.ajax(url, {
+        type: 'GET',
+        dataType: 'json'
+    });
+    ajax.done(this.onGetResponsesDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "Getting responses information"));
+};
+
+eLect.prototype.onGetResponsesDone = function(data, category) {
+    data.category = category;
     this.responses = data;
     console.log(this.responses);
     this.updateViewItems();
+    this.updateNavBar();
 };
 
 eLect.prototype.updateViewItems = function() {
     var context = {
             responses: this.responses
     };
-    console.log(this.responseSource);
-    console.log(this.navbarSource);
-    console.log($("#main-nav-bar-template"));
-    var responseList = this.responseListTemplate(context);
+    var responseList = $(this.responseListTemplate(context));
     this.responseList.replaceWith(responseList);
     this.responseList = responseList;
 };

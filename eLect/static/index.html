@@ -28,7 +28,7 @@
         <h1 class="site-title">eLect</h1>
     </div>
     <span id="nav-bar" class="main-nav-bar">
-        <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
+        <!-- <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li> -->
     </span>
     <div class="body-window">
         <div class="cur-view-workspace">
@@ -60,7 +60,7 @@
             <li class="response-item">
                 <img id="avatar-small" src="{{icon_small_location}}" />
                 <div class="item-text">
-                    <a href="#" id="item-title" data-id="{{ id }}">{{title}}</a>
+                    <a href="#" id="item-title" data-id="{{ id }}" category="{{ category }}">{{title}}</a>
                     <p class="item-short-descr" id="item-short-descr">{{description_short}}</p>
                 </div>
                 <div class="item-action"></div>
@@ -71,12 +71,18 @@
 
     <script id="main-nav-bar-template" type="text/x-handlebars-template">
         <span class="main-nav-bar">
-        <!-- <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li> -->
+        <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
+        {{#if election}}
         <li><p class="nav-item" id="nav-election" data-id="{{ election.id }}">{{election.title}}</p></li>
         <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
+        {{/if}}
+        {{#if race}}
         <li><p class="nav-item" id="nav-race" data-id="{{ race.id }}">{{race.title}}</p></li>
         <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a></li>
+        {{/if}}
+        {{#if candidate}}
         <li><p class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}">{{candidate.title}}</p></li>
+        {{/if}}
         </span>
     </script>
 
