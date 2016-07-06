@@ -1,4 +1,6 @@
 Flask>=0.11
+flask-script
+flask-login
 Jinja2
 MarkupSafe
 SQLAlchemy

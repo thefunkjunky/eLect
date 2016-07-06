@@ -29,6 +29,9 @@ class TestAPI(unittest.TestCase):
         """ Test setup """
         self.client = app.test_client()
 
+        # Drop all residual tables and data
+        Base.metadata.drop_all(engine)
+
         # Set up the tables in the database
         Base.metadata.create_all(engine)
 

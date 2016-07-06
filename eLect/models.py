@@ -2,6 +2,7 @@ import os.path
 import datetime
 
 from flask import url_for
+from flask_login import UserMixin
 from flask.json import jsonify
 from sqlalchemy import Column, Integer, Text, DateTime, Boolean, Sequence, ForeignKey, Enum, CheckConstraint, event
 from sqlalchemy.orm import relationship, validates, column_property, backref, configure_mappers
@@ -34,6 +35,8 @@ class Election(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    icon_small_location = Column(Text, 
+        default="static/site-images/election_small.gif")
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     # end_date = Column(DateTime)
@@ -70,6 +73,7 @@ class Election(Base):
         "elect_open": self.elect_open,
         "default_election_type": self.default_election_type,
         "admin_id": self.admin_id,
+        "icon_small_location": self.icon_small_location,
         }
         return election
 
@@ -83,6 +87,8 @@ class Race(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    icon_small_location = Column(Text,
+        default="static/site-images/race_small.gif")
     race_open = Column(Boolean, default=True)
     # Needs the _ to differentiate from the hybrid property
     _min_vote_val = Column(Integer, default=0)
@@ -224,6 +230,7 @@ class Race(Base):
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
+        "icon_small_location": self.icon_small_location,
         "election_id": self.election_id,
         "election_type": self.election_type,
         "start_date": self.start_date,
@@ -239,6 +246,8 @@ class Candidate(Base):
     title = Column(Text, nullable=False)
     description_short = Column(Text)
     description_long = Column(Text)
+    icon_small_location = Column(Text,
+        default="static/site-images/candidate_small.gif")
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 
@@ -252,6 +261,7 @@ class Candidate(Base):
         "title": self.title,
         "description_short": self.description_short,
         "description_long": self.description_long,
+        "icon_small_location": self.icon_small_location,
         "race_id": self.race_id,
         "start_date": self.start_date,
         "last_modified": self.last_modified,
@@ -374,13 +384,14 @@ class ElectionType(Base):
             raise NoVotes("No Votes cast in Race id {}".format(race_id))
 
 
-class User(Base):
+class User(Base, UserMixin):
     """ User class scheme """
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(Text)
     email = Column(Text, unique = True)
     password = Column(Text)
+    icon_small_location = Column(Text)
     start_date = Column(DateTime, default=datetime.datetime.utcnow())
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
 

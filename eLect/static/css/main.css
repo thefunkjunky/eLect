@@ -56,9 +56,10 @@ h4 {
     padding-left: 15px;
     /*padding-right: 10px;*/
     list-style: none;
+    align-items: center;
 }
 
-.main-nav-bar a {
+.main-nav-bar a.nav-link {
     position: relative;
     text-decoration: none;
     padding: 3px;
@@ -69,7 +70,7 @@ h4 {
     display: block;
 }
 
-.main-nav-bar a:before, .main-nav-bar a:after {
+.main-nav-bar a.nav-link:before, .main-nav-bar a.nav-link:after {
     left: 100%;
     top: 50%;
     border: solid transparent;
@@ -80,14 +81,14 @@ h4 {
     pointer-events: none;
 }
 
-.main-nav-bar a:before {
+.main-nav-bar a.nav-link:before {
     border-color: rgba(194, 225, 245, 0);
     border-left-color: #c2e1f5;
     border-width: 8px;
     margin-top: -8px;
 }
 
-.main-nav-bar a:after {
+.main-nav-bar a.nav-link:after {
     border-color: rgba(192, 185, 187, 0);
     border-left-color: #a6908d;
     border-width: 5px;
@@ -98,6 +99,19 @@ h4 {
 .main-nav-bar a:hover {
   /*background: darken(#c0b9bb, 4%);*/
   opacity:0.5;
+}
+
+p.nav-item {
+    flex: 1;
+    /*display: block;*/
+    /*align-self: center;*/
+    /*flex-wrap: false;*/
+    /*text-decoration: none;*/
+    /*color: #E7DECD;*/
+    /*padding-left: 5px;*/
+    border: 2px solid #E7DECD;
+    margin: 3px;
+    font-size: 100%;
 }
 
 
@@ -223,7 +237,8 @@ a.button:hover, a.button:active {
     flex: 0 0 80px;
     width: 80px;
     height: 80px;
-    background-color: #e7e7e7;
+    /*background-color: #e7e7e7;*/
+    border: 2px solid #E7DECD;
 }
 
 .item-text {

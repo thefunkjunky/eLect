@@ -19,6 +19,11 @@ class DevelopmentConfig(object):
 
     SECRET_KEY = cfg_params['secret_key']
     SERVER_IP = cfg_params['host']
+    UPLOAD_FOLDER = '/uploads'
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+    # Max content length = 1mb, otherwise will raise 
+    # RequestEntityTooLarge exception
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024
     DEBUG = True
 
 
@@ -40,4 +45,7 @@ class TestingConfig(object):
 
     SECRET_KEY = cfg_params['secret_key']
     SERVER_IP = cfg_params['host']
+    UPLOAD_FOLDER = '/uploads'
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024
     DEBUG = True

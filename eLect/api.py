@@ -4,6 +4,7 @@ import json
 import re
 
 from flask import request, Response, url_for, send_from_directory
+from werkzeug.utils import secure_filename
 from jsonschema import validate, ValidationError
 
 from . import models
@@ -13,6 +14,9 @@ from eLect.custom_exceptions import *
 from .database import session
 from eLect.utils import get_or_create, json_serial
 from eLect.electiontypes import WinnerTakeAll, Proportional, Schulze
+
+### Global variables
+
 
 ### Schemas for schema validation go here...
 ### GET schemas
@@ -78,6 +82,7 @@ election_POST_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "elect_open": {"type": "boolean"},
         "default_election_type": {"enum": [
                 "WTA",
@@ -94,6 +99,7 @@ race_POST_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "election_id": {"type": "number"},
         "election_type": {"enum": [
                 "WTA",
@@ -110,6 +116,7 @@ candidate_POST_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "race_id": {"type": "number"},
     },
     "required": ["title", "race_id"]
@@ -134,6 +141,7 @@ election_PUT_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "elect_open": {"type": "boolean"},
         "default_election_type": {"enum": [
                 "WTA",
@@ -151,6 +159,7 @@ race_PUT_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "election_id": {"type": "number"},
         "election_type": {"enum": [
                 "WTA",
@@ -168,6 +177,7 @@ candidate_PUT_schema = {
         "title": {"type": "string"},
         "description_short": {"type": "string"},
         "description_long": {"type": "string"},
+        "icon_small_location": {"type": "string"},
         "race_id": {"type": "number"},
     },
     "required": ["id"]

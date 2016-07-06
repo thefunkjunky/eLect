@@ -7,3 +7,4 @@ migrations/
 *.note
 *.sublime-workspace
 *.sublime-project
+*.xcf

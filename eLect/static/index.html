@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<html>
+
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>eLect</title>
     <!-- fonts -->
     <style>
@@ -16,7 +16,7 @@
     <!-- jquery -->
     <script src="https://code.jquery.com/jquery-3.0.0.js"></script>
     <!-- handlebars -->
-    <script src="https://cdnjs.com/libraries/handlebars.js"></script>
+    <script src="static/js/handlebars-v4.0.5.js"></script>
     <!-- eLect main.js -->
     <script src="static/js/main.js"></script>
 
@@ -27,11 +27,8 @@
     <div class="title-bar">
         <h1 class="site-title">eLect</h1>
     </div>
-    <span class="main-nav-bar">
-        <li><a href="#" class="nav-link" id="nav-elections">Elections</a> </li>
-        <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
-        <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a> </li>
-        <!-- <li><a href="#" class="nav-link" id="nav-vote">Vote</a></li> -->
+    <span id="nav-bar" class="main-nav-bar">
+        <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
     </span>
     <div class="body-window">
         <div class="cur-view-workspace">
@@ -46,47 +43,8 @@
                     <li><a href="#" class="button">Something Else</a></li>
                 </ul>
             </div>
-            <ul class="view-responses">
-                <li class="response-item">
-                    <div class="avatar-small"></div>
-                    <div class="item-text">
-                        <a href="#" class="item-title">List Item</a>
-                        <p class="item-short-descr">Item short description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah</p>
-                    </div>
-                    <div class="item-action"></div>
-                </li>
-                <li class="response-item">
-                    <div class="avatar-small"></div>
-                    <div class="item-text">
-                        <a href="#" class="item-title">List Item 2</a>
-                        <p class="item-short-descr">Item short description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah</p>
-                    </div>
-                    <div class="item-action"></div>
-                </li>
-                <li class="response-item">
-                    <div class="avatar-small"></div>
-                    <div class="item-text">
-                        <a href="#" class="item-title">List Item 3</a>
-                        <p class="item-short-descr">Item short description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah</p>
-                    </div>
-                    <div class="item-action"></div>
-                </li>
-                <li class="response-item">
-                    <div class="avatar-small"></div>
-                    <div class="item-text">
-                        <a href="#" class="item-title">List Item 4</a>
-                        <p class="item-short-descr">Item short description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah</p>
-                    </div>
-                    <div class="item-action"></div>
-                </li>
-                <li class="response-item">
-                    <div class="avatar-small"></div>
-                    <div class="item-text">
-                        <a href="#" class="item-title">List Item 5</a>
-                        <p class="item-short-descr">Item short description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah</p>
-                    </div>
-                    <div class="item-action"></div>
-                </li>
+            <ul id="response-list">
+
             </ul>
             <ul class="bottom-buttons action-buttons-nav">
                     <li><a href="#" class="bottom-button button">Vote or Tally</a></li>
@@ -94,6 +52,33 @@
         </div>
     </div>
 
+
+    <!-- Handlebars templates -->
+    <script id="response-item-template" type="text/x-handlebars-template">
+        <ul class="view-responses">
+            {{#each responses}}
+            <li class="response-item">
+                <img id="avatar-small" src="{{icon_small_location}}" />
+                <div class="item-text">
+                    <a href="#" id="item-title" data-category="{{ category }}" data-id="{{ id }}">{{title}}</a>
+                    <p id="item-short-descr">{{description_short}}</p>
+                </div>
+                <div class="item-action"></div>
+            </li>
+            {{/each}}
+        </ul>
+    </script>
+
+    <script id="main-nav-bar-template" type="text/x-handlebars-template">
+        <span class="main-nav-bar">
+        <!-- <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li> -->
+        <li><p class="nav-item" id="nav-election" data-id="{{ election.id }}">{{election.title}}</p></li>
+        <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
+        <li><p class="nav-item" id="nav-race" data-id="{{ race.id }}">{{race.title}}</p></li>
+        <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a></li>
+        <li><p class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}">{{candidate.title}}</p></li>
+        </span>
+    </script>
 
 
 </body>
