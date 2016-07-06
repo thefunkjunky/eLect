@@ -1,16 +1,18 @@
 var eLect = function() {
+    // console.log(Handlebars.compile);
+    // console.dir(Handlebars);
     this.electionsButton = $("#nav-elections");
     this.electionsButton.click(this.onElectionsButtonClicked.bind(this));
     // this.electionsButton = $("#nav-election");
     // this.electionsButton.click(this.onElectionButtonClicked.bind(this));
 
-    this.racesButton = $("#nav-races");
-    this.racesButton.click(this.onRacesButtonClicked.bind(this));
+    // this.racesButton = $("#nav-races");
+    // this.racesButton.click(this.onRacesButtonClicked.bind(this));
     // this.racesButton = $("#nav-race");
     // this.racesButton.click(this.onRaceButtonClicked.bind(this));
 
-    this.candidatesButton = $("#nav-candidates");
-    this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
+    // this.candidatesButton = $("#nav-candidates");
+    // this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
     // this.candidatesButton = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
@@ -28,7 +30,7 @@ var eLect = function() {
     $("#responses").on("click", "#item-title",
         this.onItemClicked.bind(this));
 
-    this.get_elections();
+    // this.get_elections();
 };
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
@@ -58,7 +60,10 @@ eLect.prototype.updateViewItems = function() {
     var context = {
             responses: this.responses
     };
-    var responseList = $(this.responseListTemplate(context));
+    console.log(this.responseSource);
+    console.log(this.navbarSource);
+    console.log($("#main-nav-bar-template"));
+    var responseList = this.responseListTemplate(context);
     this.responseList.replaceWith(responseList);
     this.responseList = responseList;
 };

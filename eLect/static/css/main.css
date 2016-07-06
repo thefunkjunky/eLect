@@ -233,7 +233,7 @@ a.button:hover, a.button:active {
     /*align-items: flex-end;*/
     min-width: 50%;
 }
-.avatar-small {
+#avatar-small {
     flex: 0 0 80px;
     width: 80px;
     height: 80px;
@@ -246,7 +246,7 @@ a.button:hover, a.button:active {
     /*flex-direction: column;*/
 }
 
-a.item-title {
+a#item-title {
     flex: 1;
     text-decoration: none;
     color: #E7DECD;
@@ -255,7 +255,7 @@ a.item-title {
     font-size: 117%;
 }
 
-a.item-title:hover {
+a#item-title:hover {
     opacity:0.5;
 }
 
