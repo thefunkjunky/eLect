@@ -17,6 +17,7 @@ var eLect = function() {
     this.viewTitle = $("#view-title");
     this.viewDescription = $("#view-description");
 
+
     // $("#item-title").on("click", "#item-title",
     //     this.onItemClicked.bind(this));
 
@@ -31,12 +32,12 @@ eLect.prototype.navBarBehavior = function() {
     // this.electionsButton.click(this.onElectionButtonClicked.bind(this));
 
     this.racesButton = $("#nav-races");
-    // this.racesButton.click(this.onRacesButtonClicked.bind(this));
+    this.racesButton.click(this.onRacesButtonClicked.bind(this));
     this.navRace = $("#nav-race");
     // this.racesButton.click(this.onRaceButtonClicked.bind(this));
 
     this.candidatesButton = $("#nav-candidates");
-    // this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
+    this.candidatesButton.click(this.onCandidatesButtonClicked.bind(this));
     this.navCandidate = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
@@ -92,8 +93,26 @@ eLect.prototype.updateNavBar = function() {
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
     var category = "election";
-    var url = "/api/elections";
-    this.getResponseList(category, url);
+    var listURL = "/api/elections";
+    this.election = null;
+    this.race = null;
+    this.candidate = null;
+    this.getResponseList(category, listURL);
+};
+
+eLect.prototype.onRacesButtonClicked = function(event) {
+    var category = "race";
+    var listURL = "/api/elections/" + this.election.id + "/races";
+    this.race = null;
+    this.candidate = null;
+    this.getResponseList(category, listURL);
+};
+
+eLect.prototype.onCandidatesButtonClicked = function(event) {
+    var category = "candidate";
+    var listURL = "/api/races/" + this.race.id + "/candidates/";
+    this.candidate = null;
+    this.getResponseList(category, listURL);
 };
 
 
@@ -102,16 +121,30 @@ eLect.prototype.onItemClicked = function(event) {
     category = item.attr("category");
     console.log(item);
     if (category == "election") {
-        var url = '/api/elections/' + item.attr("data-id") + '/races';
-        console.log(url);
-        var objectURL = '/api/elections/' + item.attr("data-id");
+        var objectURL = "/api/elections/" + item.attr("data-id");
+        this.getObject(category, objectURL);
+        // Update the category for the list objects
+        category = "race";
+        var listURL = "/api/elections/" + item.attr("data-id") + "/races";
+        console.log(category, listURL);
+        this.getResponseList(category, listURL);
+    } else if (category == "race") {
+        var objectURL = "/api/races/" + item.attr("data-id");
+        this.getObject(category, objectURL);
+        // Update the category for the list objects
+        category = "candidate";
+        var listURL = "/api/races/" + item.attr("data-id") + "/candidates";
+        console.log(category, listURL);
+        this.getResponseList(category, listURL);
+    } else if (category == "candidate") {
+        var objectURL = "/api/candidates" + item.attr("data-id");
+        this.getObject(category, objectURL);
+        console.log(category, listURL);
     };
-    this.getObject(category, objectURL);
-    this.getResponseList(category, url);
 };
 
-eLect.prototype.getObject = function(category, url) {
-    var ajax = $.ajax(url, {
+eLect.prototype.getObject = function(category, objectURL) {
+    var ajax = $.ajax(objectURL, {
         type: 'GET',
         dataType: 'json'
     });
@@ -124,12 +157,18 @@ eLect.prototype.onGetObjectDone = function(category, data) {
     if (category == "election"){
         this.election = data;
         console.log(this.election);
+    } else if (category == "race"){
+        this.race = data;
+        console.log(this.race);
+    } else if (category == "candidate"){
+        this.candidate = data;
+        console.log(this.candidate);
     };
 };
 
 
-eLect.prototype.getResponseList = function(category, url) {
-    var ajax = $.ajax(url, {
+eLect.prototype.getResponseList = function(category, listURL) {
+    var ajax = $.ajax(listURL, {
         type: 'GET',
         dataType: 'json'
     });
@@ -137,9 +176,12 @@ eLect.prototype.getResponseList = function(category, url) {
     ajax.fail(this.onFail.bind(this, "Getting responses information"));
 };
 
+
 eLect.prototype.onGetResponsesDone = function(category, data) {
     this.responses = data;
+    console.log("category: " + category);
     for (i in this.responses) {
+        console.log("response # " + i + ":" + this.responses[i]);
         this.responses[i].category = category;
     }
     // var categoryList = {
