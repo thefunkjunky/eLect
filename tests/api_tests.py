@@ -80,11 +80,13 @@ class TestAPI(unittest.TestCase):
 
         self.raceA = models.Race(
             title = "Race A",
-            election = self.electionA
+            election = self.electionA,
+            description_short = "Race A short description",
             )
         self.raceB = models.Race(
             title = "Race B",
-            election = self.electionB
+            election = self.electionB,
+            description_short = "Race B short description",
             )
 
         session.add_all([self.raceA,self.raceB])
@@ -92,22 +94,40 @@ class TestAPI(unittest.TestCase):
 
         self.candidateAA = models.Candidate(
             title = "Candidate AA",
-            race_id = self.raceA.id)
+            race_id = self.raceA.id,
+            description_short = "Candidate AA short description.",
+            description_long = "Candidate AA Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
         self.candidateAB = models.Candidate(
             title = "Candidate AB",
-            race_id = self.raceA.id)
+            race_id = self.raceA.id,
+            description_short = "Candidate AB short description.",
+            description_long = "Candidate AB Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
         self.candidateBA = models.Candidate(
             title = "Candidate BA",
-            race_id = self.raceB.id)
+            race_id = self.raceB.id,
+            description_short = "Candidate BA short description.",
+            description_long = "Candidate BA Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
         self.candidateBB = models.Candidate(
             title = "Candidate BB",
-            race_id = self.raceB.id)
+            race_id = self.raceB.id,
+            description_short = "Candidate BB short description.",
+            description_long = "Candidate BB Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
         self.candidateBC = models.Candidate(
             title = "Candidate BC",
-            race_id = self.raceB.id)
+            race_id = self.raceB.id,
+            description_short = "Candidate BC short description.",
+            description_long = "Candidate BC Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
         self.candidateBD = models.Candidate(
             title = "Candidate BD",
-            race_id = self.raceB.id)
+            race_id = self.raceB.id,
+            description_short = "Candidate BD short description.",
+            description_long = "Candidate BD Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate lacus ut lectus ornare vulputate. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse nec ex non ipsum tincidunt faucibus at in leo. Nunc in tempor ligula. Quisque consequat nisi quis posuere tincidunt. Quisque porttitor, arcu id lobortis elementum, velit erat elementum risus, sed laoreet odio dolor et nunc. Fusce at rhoncus nisl, vitae pharetra sapien. Praesent arcu ante, fringilla sit amet elit blandit, molestie viverra ante. Mauris ante neque, aliquam vel dignissim ac, euismod at erat. Morbi imperdiet neque vel felis tincidunt, eu porttitor metus tristique. Integer elementum ex vel vulputate venenatis. Nunc nibh est, aliquet eu enim a, semper maximus dui.  ",
+            )
 
         session.add_all([
             self.candidateAA,

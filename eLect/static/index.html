@@ -28,32 +28,55 @@
         <h1 class="site-title">eLect</h1>
     </div>
     <span id="nav-bar" class="main-nav-bar">
-        <!-- <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li> -->
+        <!-- main-nav-bar-template goes here -->
     </span>
     <div class="body-window">
         <div class="cur-view-workspace">
-            <div class="title-bar view-title-bar">
-                <h2 class="view-title" id="view-title">Current View Title</h2>
-                <p class="view-description" id="view-description">View description something something something someting something</p>
+            <div class="title-bar view-title-bar" id="view-title-bar">
+                <!-- view-title-template goes here -->
             </div>
-            <div class="view-actions">
-                <ul class="action-buttons-nav">
-                    <li><a href="#" class="button">Add New</a></li>
-                    <li><a href="#" class="button">Something</a></li>
-                    <li><a href="#" class="button">Something Else</a></li>
-                </ul>
+            <div class="view-actions" id="view-actions">
+                <!-- action-buttons-template goes here -->
             </div>
             <ul id="response-list">
-
+                <!-- response templates go here -->
             </ul>
             <ul class="bottom-buttons action-buttons-nav">
-                    <li><a href="#" class="bottom-button button">Vote or Tally</a></li>
+                    <li><a href="#" class="button bottom-button">Vote or Tally</a></li>
             </ul>
         </div>
     </div>
 
 
     <!-- Handlebars templates -->
+    <script id="main-nav-bar-template" type="text/x-handlebars-template">
+        <span class="main-nav-bar">
+            <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
+            {{#if election}}
+            <li><p class="nav-item" id="nav-election" data-id="{{ election.id }}">{{election.title}}</p></li>
+            <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
+            {{/if}}
+            {{#if race}}
+            <li><p class="nav-item" id="nav-race" data-id="{{ race.id }}">{{race.title}}</p></li>
+            <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a></li>
+            {{/if}}
+            {{#if candidate}}
+            <li><p class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}">{{candidate.title}}</p></li>
+            {{/if}}
+        </span>
+    </script>
+
+    <script id="view-title-template" type="text/x-handlebars-template">
+        <h2 class="view-title" id="view-title">{{title}}</h2>
+        <p class="view-description" id="view-description">{{description}}</p>
+    </script>
+
+    <script id="action-buttons-template" type="text/x-handlebars-template">
+        <span class="action-buttons-nav">
+            <li><a href="#" class="button" id="action-add">Add</a></li>
+        </span>
+    </script>
+
     <script id="response-item-template" type="text/x-handlebars-template">
         <ul class="view-responses">
             {{#each responses}}
@@ -69,22 +92,6 @@
         </ul>
     </script>
 
-    <script id="main-nav-bar-template" type="text/x-handlebars-template">
-        <span class="main-nav-bar">
-        <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
-        {{#if election}}
-        <li><p class="nav-item" id="nav-election" data-id="{{ election.id }}">{{election.title}}</p></li>
-        <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
-        {{/if}}
-        {{#if race}}
-        <li><p class="nav-item" id="nav-race" data-id="{{ race.id }}">{{race.title}}</p></li>
-        <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a></li>
-        {{/if}}
-        {{#if candidate}}
-        <li><p class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}">{{candidate.title}}</p></li>
-        {{/if}}
-        </span>
-    </script>
 
 
 </body>

@@ -367,22 +367,17 @@ def election_get(elect_id):
 
 
 @app.route("/api/elections/<int:elect_id>/races", methods=["GET"])
-@app.route("/api/races", methods=["GET"])
 @decorators.accept("application/json")
-def races_get(elect_id = None):
-    """ Returns a list of races, with option to limit query to a specific election """
+def races_get(elect_id):
+    """ Returns a list of races from given election id """
 
-    # Check for election's existence, if elect_id given
-    if elect_id:
-        check_election_id(elect_id)
-        # Finds races for election with elect_id
-        # QUESTION
-        # what is the difference between .filter(SQL expressions),
-        # and .filter_by(keyword expressions)?
-        races = session.query(models.Race).filter(
-            models.Race.election_id == elect_id)
-    else:
-        races = session.query(models.Race)
+    check_election_id(elect_id)
+    # Finds races for election with elect_id
+    # QUESTION
+    # what is the difference between .filter(SQL expressions),
+    # and .filter_by(keyword expressions)?
+    races = session.query(models.Race).filter(
+        models.Race.election_id == elect_id)
 
     races = races.order_by(models.Race.id)
 
@@ -418,18 +413,14 @@ def race_get(race_id, elect_id=None):
 
 @app.route("/api/races/<int:race_id>/candidates",
  methods=["GET"])
-@app.route("/api/candidates", methods=["GET"])
 @decorators.accept("application/json")
-def candidates_get(elect_id=None, race_id=None):
-    """ Returns a list of candidates """
-    if race_id:
-        # Check for race's existence
-        check_race_id(race_id)
-        # Find candidates for given election / race
-        candidates = session.query(models.Candidate).filter(
-            models.Race.id == race_id)
-    else:
-        candidates = session.query(models.Candidate)
+def candidates_get(race_id):
+    """ Returns a list of candidates from given race id"""
+    # Check for race's existence
+    check_race_id(race_id)
+    # Find candidates for given election / race
+    candidates = session.query(models.Candidate).filter(
+        models.Candidate.race_id == race_id)
 
     candidates = candidates.order_by(models.Candidate.id)
 
