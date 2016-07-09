@@ -32,17 +32,18 @@
     </span>
     <div class="body-window">
         <div class="cur-view-workspace">
-            <div class="title-bar view-title-bar" id="view-title-bar">
+            <div id="view-bar">
                 <!-- view-title-template goes here -->
             </div>
-            <div class="view-actions" id="view-actions">
+            <div id="view-actions">
                 <!-- action-buttons-template goes here -->
             </div>
             <ul id="response-list">
                 <!-- response templates go here -->
             </ul>
             <ul class="bottom-buttons action-buttons-nav">
-                    <li><a href="#" class="button bottom-button">Vote or Tally</a></li>
+                    <li><a href="#" class="button bottom-button" id="button-vote">Vote</a></li>
+                    <li><a href="#" class="button bottom-button" id="button-tally">Tally</a></li>
             </ul>
         </div>
     </div>
@@ -67,17 +68,21 @@
     </script>
 
     <script id="view-title-template" type="text/x-handlebars-template">
-        <h2 class="view-title" id="view-title">{{title}}</h2>
-        <p class="view-description" id="view-description">{{description}}</p>
+        <div class="title-bar view-title-bar">
+            <h2 class="view-title">{{title}}</h2>
+            <p class="view-description">{{description}}</p>
+        </div>
     </script>
 
     <script id="action-buttons-template" type="text/x-handlebars-template">
-        <span class="action-buttons-nav">
-            <li><a href="#" class="button" id="action-add">Add</a></li>
-        </span>
+        <div class="view-actions" id="view-actions">
+            <span class="action-buttons-nav">
+                <li><a href="#" class="button" id="action-add">Add</a></li>
+            </span>
+        </div>
     </script>
 
-    <script id="response-item-template" type="text/x-handlebars-template">
+    <script id="response-list-template" type="text/x-handlebars-template">
         <ul class="view-responses">
             {{#each responses}}
             <li class="response-item">

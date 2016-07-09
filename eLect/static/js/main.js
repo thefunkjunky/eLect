@@ -2,30 +2,43 @@ var eLect = function() {
     this.election = null;
     this.race = null;
     this.candidate = null;
+    this.viewItem = {title: "Welcome to eLect!",
+                    description: "Online elections platform.",
+                    category: "",
+                };
 
-    this.navBarBehavior();
+    this.clickActionBehavior();
 
     this.mainNavBar = $("#nav-bar");
     this.navbarSource = $("#main-nav-bar-template").html();
     this.navbarTemplate = Handlebars.compile(this.navbarSource);
 
+    this.viewTitleBar = $("#view-bar");
+    this.viewTitleBarSource = $("#view-title-template").html();
+    this.viewTitleBarTemplate = Handlebars.compile(this.viewTitleBarSource);
+
+    this.viewActions = $("#view-actions");
+    this.viewActionsSource = $("#action-buttons-template").html();
+    this.viewActionsTemplate = Handlebars.compile(this.viewActionsSource);
+
     this.responseList = $("#response-list");
-    this.responseSource = $("#response-item-template").html();
-    this.responseListTemplate = Handlebars.compile(this.responseSource);
+    this.responseListSource = $("#response-list-template").html();
+    this.responseListTemplate = Handlebars.compile(this.responseListSource);
     this.responses = [];
 
-    this.viewTitle = $("#view-title");
-    this.viewDescription = $("#view-description");
+    // this.viewTitle = $("#view-title");
+    // this.viewDescription = $("#view-description");
 
 
     // $("#item-title").on("click", "#item-title",
     //     this.onItemClicked.bind(this));
 
     // this.get_elections();
+    this.renderViewTitleBar();
     this.updateNavBar();
 };
 
-eLect.prototype.navBarBehavior = function() {
+eLect.prototype.clickActionBehavior = function() {
     this.electionsButton = $("#nav-elections");
     this.electionsButton.click(this.onElectionsButtonClicked.bind(this));
     this.navElection = $("#nav-election");
@@ -41,8 +54,9 @@ eLect.prototype.navBarBehavior = function() {
     this.navCandidate = $("#nav-candidate");
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
-    this.itemTitleLink = $(".item-title");
-    this.itemTitleLink.click(this.onItemClicked.bind(this));
+    this.viewItemTitleLink = $(".item-title");
+    console.log("this.viewItemTitleLink: ", this.viewItemTitleLink);
+    this.viewItemTitleLink.click(this.onItemClicked.bind(this));
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -88,7 +102,19 @@ eLect.prototype.updateNavBar = function() {
         this.candidatesButton.show();
         this.navCandidate.show();
     };
-    this.navBarBehavior();
+    this.clickActionBehavior();
+};
+
+eLect.prototype.renderViewTitleBar = function() {
+    // var category = category;
+    // var categoryFormatted = category.charAt(0).toUpperCase() + category.slice(1);
+    // var title = categoryFormatted + ": " + this.viewItem.title;
+    var context = {title: this.viewItem.title, 
+        description: this.viewItem.description};
+    console.log("context: ", context);
+    var viewTitleBar = $(this.viewTitleBarTemplate(context));
+    this.viewTitleBar.replaceWith(viewTitleBar);
+    this.viewTitleBar = viewTitleBar;
 };
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
@@ -97,6 +123,8 @@ eLect.prototype.onElectionsButtonClicked = function(event) {
     this.election = null;
     this.race = null;
     this.candidate = null;
+    this.viewItem = {title: "Elections", 
+    description: "Current list of open elections"};
     this.getResponseList(category, listURL);
 };
 
@@ -117,9 +145,10 @@ eLect.prototype.onCandidatesButtonClicked = function(event) {
 
 
 eLect.prototype.onItemClicked = function(event) {
+    console.log("onItemClicked called");
     var item = $(event.target);
     category = item.attr("category");
-    console.log(item);
+    console.log("onItemClicked item:", item);
     if (category == "election") {
         var objectURL = "/api/elections/" + item.attr("data-id");
         this.getObject(category, objectURL);
@@ -164,6 +193,9 @@ eLect.prototype.onGetObjectDone = function(category, data) {
         this.candidate = data;
         console.log(this.candidate);
     };
+
+    this.viewItem = data;
+    console.log("this.viewItem: ", this.viewItem);
 };
 
 
@@ -193,8 +225,14 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
     // });
     // this.responses = $.merge(responses, categoryList);
 
+    // var categoryFormatted = category.charAt(0).toUpperCase() + category.slice(1);
+    // var title = categoryFormatted + ": " + this.viewItem.title;
+    // this.viewItem = {title: title, 
+    //     description: this.viewItem.description};
+    console.log("this.viewItem: ", this.viewItem);
 
     console.log(this.responses);
+    this.renderViewTitleBar();
     this.updateViewItems();
     this.updateNavBar();
 };

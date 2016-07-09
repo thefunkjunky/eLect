@@ -161,8 +161,23 @@ class TestAPI(unittest.TestCase):
             data = json.loads(response.data.decode("ascii"))
             self.assertEqual(data, [])
 
+    def test_get_elections(self):
+        """ Testing GET method on /api/elections endpoint"""
+        self.populate_database()
+        # electionB = session.query(models.Election).filter(
+        #     models.Election.title == "Election B")
+        response = self.client.get("/api/elections/",
+            headers=[("Accept", "application/json")])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+
+        elections = json.loads(response.data.decode("ascii"))
+        self.assertEqual(len(elections), 2)
+        self.assertEqual(elections[0]["id"], 1)
+
     def test_get_election(self):
-        """ Testing GET method on /api/elections endpoint """
+        """ Testing GET method on /api/elections endpoint for single election"""
         self.populate_database()
         # electionB = session.query(models.Election).filter(
         #     models.Election.title == "Election B")
@@ -177,7 +192,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(election["admin_id"], self.electionB.admin_id)
 
     def test_get_race(self):
-        """ Testing GET method on /api/races endpoint """
+        """ Testing GET method on /api/races endpoint for single race"""
         self.populate_database()
         response = self.client.get("/api/races/{}".format(self.raceB.id),
             headers=[("Accept", "application/json")])
@@ -198,7 +213,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(race_long["election_type"], self.raceB.election_type)
 
     def test_get_candidate(self):
-        """ Testing GET method on /api/candidates endpoint """
+        """ Testing GET method on /api/candidates endpoint for single candidate"""
         self.populate_database()
         response = self.client.get("/api/candidates/{}".format(self.candidateBB.id),
             headers=[("Accept", "application/json")])
