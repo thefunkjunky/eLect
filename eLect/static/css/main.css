@@ -334,20 +334,25 @@ a.bottom-button {
 
 .modal-header {
     overflow: hidden;
-    background-color: #593299;
+    background-color: #4e2d84;
     border: none;
-    padding: 2px 16px;
+    padding: 4px 4px 8px;
 }
 
 .modal-close {
     float: right;
-    font-size: 26px;
+    font-size: 24px;
     font-weight: bold;
+}
+
+#modal-x-close {
+    padding: 3px;
+    border: 2px solid #E7DECD;
 }
 
 .modal-title {
     color: #E7DECD;
-    background-color: #593299;
+    background-color: #4e2d84;
     text-align: center;
     border-bottom: 1px solid #FBFAF8;
 }
@@ -369,7 +374,7 @@ a.bottom-button {
 
 .modal-footer {
     overflow: hidden;
-    background-color: #593299;
+    background-color: #4e2d84;
     padding: 2px 16px;
 }
 

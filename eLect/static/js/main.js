@@ -177,14 +177,15 @@ eLect.prototype.onCenterModalCloseClicked = function(event) {
 }
 
 // When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == this.centerModal) {
-        this.centerModal.css("display", "none");
-    };
-};
+// window.onclick = function(event) {
+//     if (event.target == this.centerModal) {
+//         this.centerModal.css("display", "none");
+//     };
+// };
 
 
 eLect.prototype.onItemClicked = function(event) {
+    var deferred = $.Deferred();
     console.log("onItemClicked called");
     var item = $(event.target);
     category = item.attr("category");
@@ -206,6 +207,9 @@ eLect.prototype.onItemClicked = function(event) {
     } else if (category == "candidate") {
         var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL);
+        // How to wait until above function has completed 
+        // before calling this.onRenderCenterModal()?
+        // Learn about JQuery deferred and promises
         this.onRenderCenterModal();
     };
 };
@@ -231,7 +235,6 @@ eLect.prototype.onGetObjectDone = function(category, data) {
         this.candidate = data;
         console.log(this.candidate);
     };
-
     this.viewItem = data;
     console.log("this.viewItem: ", this.viewItem);
 };
