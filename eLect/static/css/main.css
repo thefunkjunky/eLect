@@ -5,7 +5,7 @@ https://coolors.co/0a122a-698f3f-e7decd-804e49-69a73f
 
 body {
     background-color: #2b2f51;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 p {
@@ -17,6 +17,18 @@ a {
     font-family: 'PT Mono', monospace;
     text-decoration: none;
     color: #E7DECD;
+}
+
+a:hover {
+    /*color: #ffec18;
+    text-decoration: none;
+    cursor: pointer;*/
+    opacity: 0.5;
+}
+
+a:active {
+    opacity: 1;
+    color: #fff8a8;
 }
 
 h1 {
@@ -101,6 +113,10 @@ h4 {
 .main-nav-bar a:hover {
   /*background: darken(#c0b9bb, 4%);*/
   opacity:0.5;
+}
+
+.main-nav-bar a:active {
+    opacity: .7;
 }
 
 p.nav-item {
@@ -198,7 +214,12 @@ a.button:link, a.button:visited {
     border-radius: 20px;
 }
 
-a.button:hover, a.button:active {
+a.button:hover {
+    opacity: 0.5;
+} 
+
+a.button:active {
+    opacity: 0.7;
     background-color: #69a73f;
 }
 
@@ -240,6 +261,7 @@ a.button:hover, a.button:active {
     flex: 0 0 80px;
     width: 80px;
     height: 80px;
+    margin-right: 10px;
     /*background-color: #e7e7e7;*/
     border: 2px solid #E7DECD;
 }
@@ -250,17 +272,13 @@ a.button:hover, a.button:active {
 }
 
 a.item-title {
-    /*flex: 1;*/
-    text-decoration: none;
-    color: #E7DECD;
+
     padding-left: 5px;
     margin: 3px;
     font-size: 117%;
 }
 
-a.item-title:hover {
-    opacity:0.5;
-}
+
 
 .item-short-descr {
     padding-left: 15px;
@@ -285,8 +303,73 @@ a.item-title:hover {
     /*align-self: right;*/
 }
 
-a.bottom-button:link, a.bottom-button:visited {
+a.bottom-button {
     align-self: flex-end;
     /*padding: 3px;*/
     /*margin: 3px;*/
 }
+
+.center-modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: black;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.center-modal-content {
+    position: relative;
+    padding: 0;
+    background-color: #2b2f51;
+    margin: 15% auto;
+    border: 1px solid #E7DECD;
+    width: 80%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.modal-header {
+    overflow: hidden;
+    background-color: #593299;
+    border: none;
+    padding: 2px 16px;
+}
+
+.modal-close {
+    float: right;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.modal-title {
+    color: #E7DECD;
+    background-color: #593299;
+    text-align: center;
+    border-bottom: 1px solid #FBFAF8;
+}
+
+.modal-body {
+    overflow: hidden;
+    background-color: #2b2f51;
+    color: #FBFAF8;
+    padding: 2px 16px;
+}
+.modal-body #avatar-small {
+    float: left;
+    margin: 10px;
+}
+
+#modal-full-descr {
+    padding: 10px;
+}
+
+.modal-footer {
+    overflow: hidden;
+    background-color: #593299;
+    padding: 2px 16px;
+}
+

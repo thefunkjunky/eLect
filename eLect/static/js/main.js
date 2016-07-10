@@ -3,7 +3,7 @@ var eLect = function() {
     this.race = null;
     this.candidate = null;
     this.viewItem = {title: "Welcome to eLect!",
-                    description: "Online elections platform.",
+                    description_short: "Online elections platform.",
                     category: "",
                 };
 
@@ -25,6 +25,12 @@ var eLect = function() {
     this.responseListSource = $("#response-list-template").html();
     this.responseListTemplate = Handlebars.compile(this.responseListSource);
     this.responses = [];
+
+    this.centerModal = $("#modal");
+    this.centerModalSource = $("#full-descr-template").html();
+    this.centerModalTemplate = Handlebars.compile(this.centerModalSource);
+
+
 
     // this.viewTitle = $("#view-title");
     // this.viewDescription = $("#view-description");
@@ -55,8 +61,9 @@ eLect.prototype.clickActionBehavior = function() {
     // this.candidatesButton.click(this.onCandidateButtonClicked.bind(this));
 
     this.viewItemTitleLink = $(".item-title");
-    console.log("this.viewItemTitleLink: ", this.viewItemTitleLink);
     this.viewItemTitleLink.click(this.onItemClicked.bind(this));
+
+    
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -110,8 +117,7 @@ eLect.prototype.renderViewTitleBar = function() {
     // var categoryFormatted = category.charAt(0).toUpperCase() + category.slice(1);
     // var title = categoryFormatted + ": " + this.viewItem.title;
     var context = {title: this.viewItem.title, 
-        description: this.viewItem.description};
-    console.log("context: ", context);
+        description: this.viewItem.description_short};
     var viewTitleBar = $(this.viewTitleBarTemplate(context));
     this.viewTitleBar.replaceWith(viewTitleBar);
     this.viewTitleBar = viewTitleBar;
@@ -124,7 +130,7 @@ eLect.prototype.onElectionsButtonClicked = function(event) {
     this.race = null;
     this.candidate = null;
     this.viewItem = {title: "Elections", 
-    description: "Current list of open elections"};
+    description_short: "Current list of open elections"};
     this.getResponseList(category, listURL);
 };
 
@@ -143,6 +149,40 @@ eLect.prototype.onCandidatesButtonClicked = function(event) {
     this.getResponseList(category, listURL);
 };
 
+eLect.prototype.onRenderCenterModal = function() {
+    context = {
+        title: this.viewItem.title,
+        icon_small_location: this.viewItem.icon_small_location,
+    };
+    if (this.viewItem.description_long) {
+        context.description = this.viewItem.description_long;
+    } else {
+        context.description = this.viewItem.description_short;
+    };
+    console.log("onRenderCenterModal context: ", context);
+
+    var centerModal = $(this.centerModalTemplate(context));
+    this.centerModal.replaceWith(centerModal);
+    this.centerModal = centerModal;
+
+    this.centerModal.css("display", "block");
+
+    this.centerModalClose = $(".modal-close");
+    this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+
+}
+
+eLect.prototype.onCenterModalCloseClicked = function(event) {
+    this.centerModal.css("display", "none");
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == this.centerModal) {
+        this.centerModal.css("display", "none");
+    };
+};
+
 
 eLect.prototype.onItemClicked = function(event) {
     console.log("onItemClicked called");
@@ -155,7 +195,6 @@ eLect.prototype.onItemClicked = function(event) {
         // Update the category for the list objects
         category = "race";
         var listURL = "/api/elections/" + item.attr("data-id") + "/races";
-        console.log(category, listURL);
         this.getResponseList(category, listURL);
     } else if (category == "race") {
         var objectURL = "/api/races/" + item.attr("data-id");
@@ -163,12 +202,11 @@ eLect.prototype.onItemClicked = function(event) {
         // Update the category for the list objects
         category = "candidate";
         var listURL = "/api/races/" + item.attr("data-id") + "/candidates";
-        console.log(category, listURL);
         this.getResponseList(category, listURL);
     } else if (category == "candidate") {
-        var objectURL = "/api/candidates" + item.attr("data-id");
+        var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL);
-        console.log(category, listURL);
+        this.onRenderCenterModal();
     };
 };
 
