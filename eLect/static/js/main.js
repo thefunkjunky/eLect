@@ -130,7 +130,7 @@ eLect.prototype.onElectionsButtonClicked = function(event) {
     this.race = null;
     this.candidate = null;
     this.viewItem = {title: "Elections", 
-    description_short: "Current list of open elections"};
+        description_short: "Current list of open elections"};
     this.getResponseList(category, listURL);
 };
 
@@ -185,7 +185,6 @@ eLect.prototype.onCenterModalCloseClicked = function(event) {
 
 
 eLect.prototype.onItemClicked = function(event) {
-    var deferred = $.Deferred();
     console.log("onItemClicked called");
     var item = $(event.target);
     category = item.attr("category");
@@ -206,25 +205,26 @@ eLect.prototype.onItemClicked = function(event) {
         this.getResponseList(category, listURL);
     } else if (category == "candidate") {
         var objectURL = "/api/candidates/" + item.attr("data-id");
-        this.getObject(category, objectURL);
+        this.getObject(category, objectURL, this.onRenderCenterModal);
         // How to wait until above function has completed 
         // before calling this.onRenderCenterModal()?
         // Learn about JQuery deferred and promises
-        this.onRenderCenterModal();
+        // this.onRenderCenterModal();
     };
 };
 
-eLect.prototype.getObject = function(category, objectURL) {
+eLect.prototype.getObject = function(category, objectURL, callback) {
     var ajax = $.ajax(objectURL, {
         type: 'GET',
         dataType: 'json'
     });
-    ajax.done(this.onGetObjectDone.bind(this, category));
+    ajax.done(this.onGetObjectDone.bind(this, category, callback));
     ajax.fail(this.onFail.bind(this, "Getting parent object information"));
 };
 
-eLect.prototype.onGetObjectDone = function(category, data) {
+eLect.prototype.onGetObjectDone = function(category, callback, data) {
     console.log(category);
+    console.log("callback: ", callback);
     if (category == "election"){
         this.election = data;
         console.log(this.election);
@@ -237,6 +237,10 @@ eLect.prototype.onGetObjectDone = function(category, data) {
     };
     this.viewItem = data;
     console.log("this.viewItem: ", this.viewItem);
+    
+    if (callback) {
+        callback.bind(this)();
+    };
 };
 
 
