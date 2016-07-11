@@ -245,7 +245,7 @@ a.button:active {
 }
 
 .response-item {
-    flex: 1;
+    /*flex: 1;*/
     display: flex;
     flex-direction: row;
     flex-wrap: true;
@@ -305,7 +305,7 @@ a.item-title {
 }
 
 a.bottom-button {
-    align-self: flex-end;
+    /*align-self: flex-end;*/
     /*padding: 3px;*/
     /*margin: 3px;*/
 }
