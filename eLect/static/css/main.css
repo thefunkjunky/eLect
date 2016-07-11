@@ -163,22 +163,23 @@ p.nav-item {
 }
 
 .view-title-bar {
+    display: flex;
     flex-direction: column;
-    /*align-content: center;*/
-    /*align-items: center;*/
+    align-content: center;
+    align-items: center;
     border: none;
 }
 
 .view-title {
-    align-self: center;
+    /*align-self: center;*/
     margin: 8px;
     border-bottom: 1px solid #FBFAF8;
 }
 
 .view-description {
-    flex: 1;
-    flex-wrap: true;
-    align-self: center;
+    /*flex: 1;*/
+    /*flex-wrap: true;*/
+    /*align-self: center;*/
     margin: 8px;
 }
 
