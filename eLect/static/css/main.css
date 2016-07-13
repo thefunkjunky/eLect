@@ -73,7 +73,7 @@ h4 {
     align-items: center;
 }
 
-.main-nav-bar a.nav-link {
+.main-nav-bar a.nav-list {
     position: relative;
     text-decoration: none;
     padding: 3px;
@@ -84,7 +84,7 @@ h4 {
     display: block;
 }
 
-.main-nav-bar a.nav-link:before, .main-nav-bar a.nav-link:after {
+.main-nav-bar a.nav-list:before, .main-nav-bar a.nav-list:after {
     left: 100%;
     top: 50%;
     border: solid transparent;
@@ -95,14 +95,14 @@ h4 {
     pointer-events: none;
 }
 
-.main-nav-bar a.nav-link:before {
+.main-nav-bar a.nav-list:before {
     border-color: rgba(194, 225, 245, 0);
     border-left-color: #c2e1f5;
     border-width: 8px;
     margin-top: -8px;
 }
 
-.main-nav-bar a.nav-link:after {
+.main-nav-bar a.nav-list:after {
     border-color: rgba(192, 185, 187, 0);
     border-left-color: #a6908d;
     border-width: 5px;
@@ -119,8 +119,9 @@ h4 {
     opacity: .7;
 }
 
-p.nav-item {
+a.nav-item {
     flex: 1;
+    font-family: 'Gentium Book Basic', serif;
     /*display: block;*/
     /*align-self: center;*/
     /*flex-wrap: false;*/

@@ -58,17 +58,17 @@
     <!-- Handlebars templates -->
     <script id="main-nav-bar-template" type="text/x-handlebars-template">
         <span class="main-nav-bar">
-            <li><a href="#" class="nav-link" id="nav-elections">Elections</a></li>
+            <li><a href="#" class="nav-list" id="nav-elections">Elections</a></li>
             {{#if election}}
-            <li><p class="nav-item" id="nav-election" data-id="{{ election.id }}">{{election.title}}</p></li>
-            <li><a href="#" class="nav-link" id="nav-races">Races</a></li>
+            <li><a href="#" class="nav-item" id="nav-election" data-id="{{ election.id }}" category="election">{{election.title}}</a></li>
+            <li><a href="#" class="nav-list" id="nav-races">Races</a></li>
             {{/if}}
             {{#if race}}
-            <li><p class="nav-item" id="nav-race" data-id="{{ race.id }}">{{race.title}}</p></li>
-            <li><a href="#" class="nav-link" id="nav-candidates">Candidates</a></li>
+            <li><a href="#" class="nav-item" id="nav-race" data-id="{{ race.id }}" category="race">{{race.title}}</a></li>
+            <li><a href="#" class="nav-list" id="nav-candidates">Candidates</a></li>
             {{/if}}
             {{#if candidate}}
-            <li><p class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}">{{candidate.title}}</p></li>
+            <li><a href="#" class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}" category="candidate">{{candidate.title}}</a></li>
             {{/if}}
         </span>
     </script>

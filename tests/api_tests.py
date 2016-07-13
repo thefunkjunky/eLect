@@ -191,6 +191,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(election["title"], "Election B")
         self.assertEqual(election["admin_id"], self.electionB.admin_id)
 
+    def test_get_races(self):
+        """ Testing GET method on /api/races endpoint"""
+        self.populate_database()
+        response = self.client.get("/api/elections/1/races",
+            headers=[("Accept", "application/json")])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+
+        races = json.loads(response.data.decode("ascii"))
+        self.assertEqual(len(races), 1)
+        self.assertEqual(races[0]["id"], 1)
+
     def test_get_race(self):
         """ Testing GET method on /api/races endpoint for single race"""
         self.populate_database()
@@ -211,6 +224,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(race["title"], "Race B")
         self.assertEqual(race["election_type"], self.raceB.election_type)
         self.assertEqual(race_long["election_type"], self.raceB.election_type)
+
+    def test_get_candidates(self):
+        """ Testing GET method on /api/candidates endpoint"""
+        self.populate_database()
+        response = self.client.get("/api/races/2/candidates",
+            headers=[("Accept", "application/json")])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+
+        candidates = json.loads(response.data.decode("ascii"))
+        self.assertEqual(len(candidates), 4)
+        self.assertEqual(candidates[0]["title"], "Candidate BA")
 
     def test_get_candidate(self):
         """ Testing GET method on /api/candidates endpoint for single candidate"""

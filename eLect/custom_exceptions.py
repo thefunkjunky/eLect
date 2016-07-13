@@ -4,6 +4,8 @@ class NoRaces(Exception):
     pass
 class NoCandidates(Exception):
     pass
+class NotEnoughCandidates(Exception):
+    pass
 class Update_elect_open_Failed(Exception):
     pass
 class ClosedElection(Exception):

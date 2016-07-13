@@ -63,7 +63,8 @@ eLect.prototype.clickActionBehavior = function() {
     this.viewItemTitleLink = $(".item-title");
     this.viewItemTitleLink.click(this.onItemClicked.bind(this));
 
-    
+    this.navItem = $(".nav-item");
+    this.navItem.click(this.onNavItemClicked.bind(this));
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -206,12 +207,31 @@ eLect.prototype.onItemClicked = function(event) {
     } else if (category == "candidate") {
         var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL, this.onRenderCenterModal);
-        // How to wait until above function has completed 
-        // before calling this.onRenderCenterModal()?
-        // Learn about JQuery deferred and promises
-        // this.onRenderCenterModal();
     };
 };
+
+eLect.prototype.onNavItemClicked = function(event) {
+    console.log("onNavItemClicked called");
+    var item = $(event.target);
+    category = item.attr("category");
+    console.log("onItemClicked item:", item);
+    if (category == "election") {
+        var objectURL = "/api/elections/" + item.attr("data-id");
+        this.getObject(category, objectURL, this.onRenderCenterModal);
+    } else if (category == "race") {
+        var objectURL = "/api/races/" + item.attr("data-id");
+        this.getObject(category, objectURL);
+        // Update the category for the list objects
+        category = "candidate";
+        var listURL = "/api/races/" + item.attr("data-id") + "/candidates";
+        this.getObject(category, objectURL, this.onRenderCenterModal);
+    } else if (category == "candidate") {
+        var objectURL = "/api/candidates/" + item.attr("data-id");
+        this.getObject(category, objectURL, this.onRenderCenterModal);
+    };
+};
+
+
 
 eLect.prototype.getObject = function(category, objectURL, callback) {
     var ajax = $.ajax(objectURL, {
