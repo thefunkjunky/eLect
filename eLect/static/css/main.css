@@ -380,6 +380,16 @@ a.bottom-button {
     padding: 2px 16px;
 }
 
+.form-tables {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+
 .form-elements {
     list-style: none;
+}
+
+#form-submit {
+    align-self: flex-end;
 }

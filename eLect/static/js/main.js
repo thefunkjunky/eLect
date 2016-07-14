@@ -217,7 +217,8 @@ eLect.prototype.onAddItemClicked = function(event) {
     var categoryCapitalized = this.capitalize(category);
     var title = "Add " + categoryCapitalized;
     var context = {
-        title: title
+        title: title,
+        category: category,
     };
 
     var centerModal = $(this.addItemModalTemplate(context));

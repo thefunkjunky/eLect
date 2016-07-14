@@ -127,47 +127,66 @@
         <div class="center-modal" id="add-item-modal">
             <div class="center-modal-content">
                 <div class="modal-header">
-                    <a href="#" class="modal-actions" id="modal-x-close">x</a>
+                    <a href="#" class="modal-actions modal-close" id="modal-x-close">x</a>
                     <h1 class="modal-title">{{title}}</h1>
                 </div>
                 <div class="modal-body">
                     <form action="#" method="POST" class="form-add-item">
-                    <ul class="form-elements">
-                        <li>
-                            <p>Title: </p>
-                            <input type="text" name="title" size="15" maxlength="45" />
-                        </li>
-                        <li>
-                            <p>Short Description: </p>
-                            <input type="text" name="short-descr" size="15" maxlength="100" />
-                        </li>
-                        <li>
-                            <p>Long Description: 
-                            </p>
-                            <textarea name="long-descr" cols="50" rows="10" maxlength="1000"></textarea>
-                        </li>
-                        {{#if_equal category "election"}}
-                        <li>
-                            <p>Election type:</p>
-                            <select name="elect_types" id="elect-type-dropdown">
-                                <option value="WTA">Winner-Take-All</option>
-                                <option value="Proportional">Proportional</option>
-                                <option value="Schulze">Schulze (Condorcent)</option>
-                            </select>
-                            
-                        </li>
-                        {{/if_equal}}
-                        {{#if_equal category "race"}}
-                        <li>
-                        <p>Race type (overrides parent election type):</p>
-                        <select name="elect_types" id="elect-type-dropdown">
-                                <option value="WTA">Winner-Take-All</option>
-                                <option value="Proportio modal-closenal">Proportional</option>
-                                <option value="Schulze">Schulze (Condorcent)</option>
-                        </select>
-                        </li>
-                        {{/if_equal}}
-                        <p><input type="submit" name="submit-item" value="{{title}}"></p>
+                    <span class="form-tables">
+                    <table class="form-table">
+                        <tr>
+                            <td>
+                                <ul class="form-elements">
+                                    <li>
+                                        <p>Title: </p>
+                                        <input type="text" name="title" size="15" maxlength="45" />
+                                    </li>
+                                    <li>
+                                        <p>Short Description: </p>
+                                        <input type="text" name="short-descr" size="15" maxlength="100" />
+                                    </li>
+                                    {{#if_equal category "election"}}
+                                    <li>
+                                        <p>Election type:</p>
+                                        <select name="elect_types" id="elect-type-dropdown">
+                                            <option value="WTA">Winner-Take-All</option>
+                                            <option value="Proportional">Proportional</option>
+                                            <option value="Schulze">Schulze (Condorcent)</option>
+                                        </select>
+                                        
+                                    </li>
+
+                                {{/if_equal}}
+                                {{#if_equal category "race"}}
+                                <li>
+                                <p>Race type (overrides parent election type):</p>
+                                <select name="elect_types" id="elect-type-dropdown">
+                                        <option value="WTA">Winner-Take-All</option>
+                                        <option value="Proportio modal-closenal">Proportional</option>
+                                        <option value="Schulze">Schulze (Condorcent)</option>
+                                </select>
+                                </li>
+                                {{/if_equal}}
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="form-table">
+                        <tr>
+                            <td>
+                                <ul class="form-elements">
+                                <li>
+                                    <p>Long Description: 
+                                    </p>
+                                    <textarea name="long-descr" cols="50" rows="10" maxlength="1000"></textarea>
+                                </li>
+                                </ul>
+                                
+                            </td>
+                        </tr>
+                    </table>
+                    </span>
+                    <p><input type="submit" id="form-submit" name="submit-item" value="{{title}}"></p>
                     </form>
                 </div>
                 <div class="modal-footer">
