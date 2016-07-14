@@ -391,5 +391,6 @@ a.bottom-button {
 }
 
 #form-submit {
-    align-self: flex-end;
+
+    float: left;
 }

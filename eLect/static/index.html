@@ -99,7 +99,7 @@
                 </div>
                 <div class="item-action"></div>
             </li>
-           # {{/each}}
+           {{/each}}
         </ul>
     </script>
     
@@ -131,7 +131,7 @@
                     <h1 class="modal-title">{{title}}</h1>
                 </div>
                 <div class="modal-body">
-                    <form action="#" method="POST" class="form-add-item">
+                    <form action="#" method="POST" id="form-add-item">
                     <span class="form-tables">
                     <table class="form-table">
                         <tr>
@@ -139,16 +139,16 @@
                                 <ul class="form-elements">
                                     <li>
                                         <p>Title: </p>
-                                        <input type="text" name="title" size="15" maxlength="45" />
+                                        <input type="text" name="title" size="30" maxlength="45" required/>
                                     </li>
                                     <li>
                                         <p>Short Description: </p>
-                                        <input type="text" name="short-descr" size="15" maxlength="100" />
+                                        <textarea name="description_short" cols="40" rows="3" maxlength="1000"></textarea>
                                     </li>
                                     {{#if_equal category "election"}}
                                     <li>
                                         <p>Election type:</p>
-                                        <select name="elect_types" id="elect-type-dropdown">
+                                        <select name="default_election_type" id="elect-type-dropdown">
                                             <option value="WTA">Winner-Take-All</option>
                                             <option value="Proportional">Proportional</option>
                                             <option value="Schulze">Schulze (Condorcent)</option>
@@ -160,7 +160,7 @@
                                 {{#if_equal category "race"}}
                                 <li>
                                 <p>Race type (overrides parent election type):</p>
-                                <select name="elect_types" id="elect-type-dropdown">
+                                <select name="election_type" id="elect-type-dropdown">
                                         <option value="WTA">Winner-Take-All</option>
                                         <option value="Proportio modal-closenal">Proportional</option>
                                         <option value="Schulze">Schulze (Condorcent)</option>
@@ -178,18 +178,20 @@
                                 <li>
                                     <p>Long Description: 
                                     </p>
-                                    <textarea name="long-descr" cols="50" rows="10" maxlength="1000"></textarea>
+                                    <textarea name="description_long" cols="50" rows="10" maxlength="1000"></textarea>
                                 </li>
                                 </ul>
                                 
                             </td>
                         </tr>
                     </table>
+                    <div class="form-separate"></div>
                     </span>
-                    <p><input type="submit" id="form-submit" name="submit-item" value="{{title}}"></p>
+                    <!-- <input type="submit" id="form-submit" name="submit-item" value="{{title}}" /> -->
                     </form>
                 </div>
                 <div class="modal-footer">
+                    <a href="#" class="modal-actions" id="form-submit">{{title}}</a>
                     <a href="#" class="modal-actions modal-close" >Close</a>
                 </div>
             </div>

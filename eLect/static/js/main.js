@@ -11,6 +11,7 @@ var eLect = function() {
     this.race = null;
     this.candidate = null;
     this.currentViewCategory = "election";
+    this.listURL = "/api/elections";
     this.viewItem = {title: "Welcome to eLect!",
                     description_short: "Online elections platform.",
                     category: "",
@@ -150,10 +151,10 @@ eLect.prototype.renderViewActions = function() {
     this.viewActions.replaceWith(viewActions);
     this.viewActions = viewActions;
 
-    if (this.currentViewCategory = "election") {
-        console.log("if currentview = election has been called.");
-        $("#action-add").css("align-items", "center");
-    };
+    // if (this.currentViewCategory = "election") {
+    //     console.log("if currentview = election has been called.");
+    //     $("#action-add").css("align-items", "center");
+    // };
 }
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
@@ -229,9 +230,23 @@ eLect.prototype.onAddItemClicked = function(event) {
 
     this.centerModalClose = $(".modal-close");
     this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+
+    this.addItemForm = $("#form-add-item");
+
+
+    this.addItemSubmit = $("#form-submit");
+    this.addItemSubmit.click(this.onAddItemSubmitClicked.bind(this));
 };
 
-
+eLect.prototype.onAddItemSubmitClicked = function(event) {
+    // var categories = ["election", "race", "candidate"];
+    // var nextCatIndex = categories.indexOf(this.category) + 1;
+    // var nextCategory = categories[nextCatIndex];
+    var postURL = "/api/" + this.currentViewCategory + "s";
+    console.log("postURL", postURL);
+    // var addItemData = new FormData(this.addItemForm[0]);
+    this.postObject(postURL);
+};
 
 eLect.prototype.onCenterModalCloseClicked = function(event) {
     this.centerModal.css("display", "none");
@@ -325,6 +340,8 @@ eLect.prototype.onGetObjectDone = function(category, callback, data) {
 
 
 eLect.prototype.getResponseList = function(category, listURL) {
+    this.listURL = listURL;
+    console.log("listURL", this.listURL);
     var ajax = $.ajax(listURL, {
         type: 'GET',
         dataType: 'json'
@@ -337,6 +354,7 @@ eLect.prototype.getResponseList = function(category, listURL) {
 eLect.prototype.onGetResponsesDone = function(category, data) {
     this.responses = data;
     this.currentViewCategory = category;
+
     console.log("currentViewCategory: " + this.currentViewCategory);
     for (i in this.responses) {
         console.log("response # " + i + ":" + this.responses[i]);
@@ -365,6 +383,42 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
 
     // Goes last, to ensure all clickable things are made clicky
     this.clickActionBehavior();
+};
+
+eLect.prototype.convertFormToJSON = function(form) {
+    var array = $(form).serializeArray();
+    var json = {};
+    
+    $.each(array, function() {
+        json[this.name] = this.value || '';
+    });
+    
+    return json;
+};
+
+eLect.prototype.postObject = function(postURL) {
+    var data = this.convertFormToJSON("#form-add-item");
+    if (this.race) {
+        data["race_id"] = this.race.id;
+    } else if (this.election) {
+        data["election_id"] = this.election.id;
+    };
+    console.log("post data", data);
+    var ajax = $.ajax(postURL, {
+        type: 'POST',
+        // cache: false,
+        contentType: "application/json; charset=utf-8",
+        // processData: false,
+        dataType: 'json',
+        data: JSON.stringify(data),
+    });
+    ajax.done(this.onPostObjectDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "POST failed...")); 
+};
+
+eLect.prototype.onPostObjectDone = function() {
+    this.onCenterModalCloseClicked();
+    this.getResponseList(this.currentViewCategory, this.listURL);
 };
 
 eLect.prototype.updateViewItems = function() {

@@ -91,7 +91,7 @@ election_POST_schema = {
                 },
         "admin_id": {"type": "number"}
     },
-    "required": ["title", "admin_id"]
+    "required": ["title"]
 }
 race_POST_schema = {
     "type": "object",

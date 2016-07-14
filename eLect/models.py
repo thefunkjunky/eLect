@@ -48,7 +48,7 @@ class Election(Base):
         default="WTA")
     races = relationship("Race", backref="election", cascade="all, delete-orphan")
     # TODO: Open this up to have ability to have multiple admins (many-to-many?)
-    admin_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    admin_id = Column(Integer, ForeignKey('user.id'), nullable=False, default=1)
 
     # Update race_open in child races on elect_open update.  Should only be one-way.
     @validates("elect_open")
