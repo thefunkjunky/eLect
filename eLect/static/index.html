@@ -8,9 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>eLect</title>
     <!-- fonts -->
-    <style>
+    <!-- <style>
     @import 'https://fonts.googleapis.com/css?family=Gentium+Book+Basic|Open+Sans|PT+Mono|Raleway';
-    </style> 
+    </style>  -->
     <!-- main.css -->
     <link rel="stylesheet" href="static/css/main.css">
     <!-- jquery -->
@@ -41,10 +41,10 @@
             <ul id="response-list">
                 <!-- response templates go here -->
             </ul>
-            <ul class="bottom-buttons action-buttons-nav">
+            <span class="action-buttons bottom-buttons">
                     <li><a href="#" class="button bottom-button" id="button-vote">Vote</a></li>
                     <li><a href="#" class="button bottom-button" id="button-tally">Tally</a></li>
-            </ul>
+            </span>
         </div>
     </div>
     <div class="footer">
@@ -81,9 +81,9 @@
     </script>
 
     <script id="action-buttons-template" type="text/x-handlebars-template">
-        <div class="view-actions" id="view-actions">
-            <span class="action-buttons-nav">
-                <li><a href="#" class="button" id="action-add">Add</a></li>
+        <div id="view-actions">
+            <span class="action-buttons">
+                <li ><a href="#" class="button" id="action-add" category="{{category}}" parent-id="{{parentID}}">Add {{category}}</a></li>
             </span>
         </div>
     </script>
@@ -99,7 +99,7 @@
                 </div>
                 <div class="item-action"></div>
             </li>
-            {{/each}}
+           # {{/each}}
         </ul>
     </script>
     
@@ -108,7 +108,7 @@
         <div class="center-modal" id="full-descr-modal">
             <div class="center-modal-content">
                 <div class="modal-header">
-                    <a href="#" class="modal-close" id="modal-x-close">x</a>
+                    <a href="#" class="modal-actions modal-close" id="modal-x-close">x</a>
                     <h1 class="modal-title">{{title}}</h1>
                 </div>
                 <div class="modal-body">
@@ -116,7 +116,62 @@
                     <p id="modal-full-descr">{{description}}</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="modal-close">Close</a>
+                    <a href="#" class="modal-actions modal-close" >Close</a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Add item pop-up ("Modal" window) -->
+    <script id="add-item-template" type="text/x-handlebars-template">
+        <div class="center-modal" id="add-item-modal">
+            <div class="center-modal-content">
+                <div class="modal-header">
+                    <a href="#" class="modal-actions" id="modal-x-close">x</a>
+                    <h1 class="modal-title">{{title}}</h1>
+                </div>
+                <div class="modal-body">
+                    <form action="#" method="POST" class="form-add-item">
+                    <ul class="form-elements">
+                        <li>
+                            <p>Title: </p>
+                            <input type="text" name="title" size="15" maxlength="45" />
+                        </li>
+                        <li>
+                            <p>Short Description: </p>
+                            <input type="text" name="short-descr" size="15" maxlength="100" />
+                        </li>
+                        <li>
+                            <p>Long Description: 
+                            </p>
+                            <textarea name="long-descr" cols="50" rows="10" maxlength="1000"></textarea>
+                        </li>
+                        {{#if_equal category "election"}}
+                        <li>
+                            <p>Election type:</p>
+                            <select name="elect_types" id="elect-type-dropdown">
+                                <option value="WTA">Winner-Take-All</option>
+                                <option value="Proportional">Proportional</option>
+                                <option value="Schulze">Schulze (Condorcent)</option>
+                            </select>
+                            
+                        </li>
+                        {{/if_equal}}
+                        {{#if_equal category "race"}}
+                        <li>
+                        <p>Race type (overrides parent election type):</p>
+                        <select name="elect_types" id="elect-type-dropdown">
+                                <option value="WTA">Winner-Take-All</option>
+                                <option value="Proportio modal-closenal">Proportional</option>
+                                <option value="Schulze">Schulze (Condorcent)</option>
+                        </select>
+                        </li>
+                        {{/if_equal}}
+                        <p><input type="submit" name="submit-item" value="{{title}}"></p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="modal-actions modal-close" >Close</a>
                 </div>
             </div>
         </div>

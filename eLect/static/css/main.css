@@ -184,12 +184,7 @@ a.nav-item {
     margin: 8px;
 }
 
-.view-actions {
-    /*display: flex;*/
-    justify-content: space-around;
-}
-
-.action-buttons-nav {
+.action-buttons {
     display: flex;
     flex-flow: row wrap;
     /*flex: 1 0 auto;*/
@@ -198,7 +193,12 @@ a.nav-item {
     margin: 0px;
     /*align-self: left;*/
     list-style: none;
-    /*justify-content: space-around;*/
+    justify-content: space-around;
+}
+
+#action-add {
+    /*flex: 1;*/
+    align-self: center;
 }
 
 a.button:link, a.button:visited {
@@ -341,7 +341,7 @@ a.bottom-button {
     padding: 4px 4px 8px;
 }
 
-.modal-close {
+.modal-actions {
     float: right;
     font-size: 24px;
     font-weight: bold;
@@ -380,3 +380,6 @@ a.bottom-button {
     padding: 2px 16px;
 }
 
+.form-elements {
+    list-style: none;
+}

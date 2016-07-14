@@ -1,7 +1,16 @@
+Handlebars.registerHelper('if_equal', function(a, b, opts) {
+    if (a == b) {
+        return opts.fn(this);
+    } else {
+        return opts.inverse(this);
+    }
+});
+
 var eLect = function() {
     this.election = null;
     this.race = null;
     this.candidate = null;
+    this.currentViewCategory = "election";
     this.viewItem = {title: "Welcome to eLect!",
                     description_short: "Online elections platform.",
                     category: "",
@@ -27,8 +36,10 @@ var eLect = function() {
     this.responses = [];
 
     this.centerModal = $("#modal");
-    this.centerModalSource = $("#full-descr-template").html();
-    this.centerModalTemplate = Handlebars.compile(this.centerModalSource);
+    this.fullDescrModalSource = $("#full-descr-template").html();
+    this.fullDescrModalTemplate = Handlebars.compile(this.fullDescrModalSource);
+    this.addItemModalSource = $("#add-item-template").html();
+    this.addItemModalTemplate = Handlebars.compile(this.addItemModalSource);
 
 
 
@@ -42,6 +53,9 @@ var eLect = function() {
     // this.get_elections();
     this.renderViewTitleBar();
     this.updateNavBar();
+    this.renderViewActions();
+
+    this.clickActionBehavior();
 };
 
 eLect.prototype.clickActionBehavior = function() {
@@ -65,6 +79,9 @@ eLect.prototype.clickActionBehavior = function() {
 
     this.navItem = $(".nav-item");
     this.navItem.click(this.onNavItemClicked.bind(this));
+
+    this.addItem = $("#action-add");
+    this.addItem.click(this.onAddItemClicked.bind(this));
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -124,6 +141,21 @@ eLect.prototype.renderViewTitleBar = function() {
     this.viewTitleBar = viewTitleBar;
 };
 
+eLect.prototype.renderViewActions = function() {
+    var context = {
+        category: this.currentViewCategory,
+        parentID: this.viewItem.id
+    };
+    var viewActions = $(this.viewActionsTemplate(context));
+    this.viewActions.replaceWith(viewActions);
+    this.viewActions = viewActions;
+
+    if (this.currentViewCategory = "election") {
+        console.log("if currentview = election has been called.");
+        $("#action-add").css("align-items", "center");
+    };
+}
+
 eLect.prototype.onElectionsButtonClicked = function(event) {
     var category = "election";
     var listURL = "/api/elections";
@@ -150,8 +182,14 @@ eLect.prototype.onCandidatesButtonClicked = function(event) {
     this.getResponseList(category, listURL);
 };
 
+eLect.prototype.capitalize = function(string) {
+    string[0] = string[0].toUpperCase();
+    return string;
+}
+
+
 eLect.prototype.onRenderCenterModal = function() {
-    context = {
+    var context = {
         title: this.viewItem.title,
         icon_small_location: this.viewItem.icon_small_location,
     };
@@ -162,7 +200,7 @@ eLect.prototype.onRenderCenterModal = function() {
     };
     console.log("onRenderCenterModal context: ", context);
 
-    var centerModal = $(this.centerModalTemplate(context));
+    var centerModal = $(this.fullDescrModalTemplate(context));
     this.centerModal.replaceWith(centerModal);
     this.centerModal = centerModal;
 
@@ -172,6 +210,27 @@ eLect.prototype.onRenderCenterModal = function() {
     this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
 
 }
+
+eLect.prototype.onAddItemClicked = function(event) {
+    var item = $(event.target);
+    var category = item.attr("category");
+    var categoryCapitalized = this.capitalize(category);
+    var title = "Add " + categoryCapitalized;
+    var context = {
+        title: title
+    };
+
+    var centerModal = $(this.addItemModalTemplate(context));
+    this.centerModal.replaceWith(centerModal);
+    this.centerModal = centerModal;
+
+    this.centerModal.css("display", "block");
+
+    this.centerModalClose = $(".modal-close");
+    this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+};
+
+
 
 eLect.prototype.onCenterModalCloseClicked = function(event) {
     this.centerModal.css("display", "none");
@@ -188,7 +247,7 @@ eLect.prototype.onCenterModalCloseClicked = function(event) {
 eLect.prototype.onItemClicked = function(event) {
     console.log("onItemClicked called");
     var item = $(event.target);
-    category = item.attr("category");
+    var category = item.attr("category");
     console.log("onItemClicked item:", item);
     if (category == "election") {
         var objectURL = "/api/elections/" + item.attr("data-id");
@@ -276,7 +335,8 @@ eLect.prototype.getResponseList = function(category, listURL) {
 
 eLect.prototype.onGetResponsesDone = function(category, data) {
     this.responses = data;
-    console.log("category: " + category);
+    this.currentViewCategory = category;
+    console.log("currentViewCategory: " + this.currentViewCategory);
     for (i in this.responses) {
         console.log("response # " + i + ":" + this.responses[i]);
         this.responses[i].category = category;
@@ -300,6 +360,10 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
     this.renderViewTitleBar();
     this.updateViewItems();
     this.updateNavBar();
+    this.renderViewActions();
+
+    // Goes last, to ensure all clickable things are made clicky
+    this.clickActionBehavior();
 };
 
 eLect.prototype.updateViewItems = function() {
