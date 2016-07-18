@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="static/css/main.css">
     <!-- jquery -->
     <script src="static/js/jquery-3.1.0.js"></script>
+    <script src="static/js/jquery.color-2.1.2.js"></script>
     <!-- handlebars -->
     <script src="static/js/handlebars-v4.0.5.js"></script>
     <!-- eLect main.js -->
@@ -58,18 +59,21 @@
     <!-- Handlebars templates -->
     <script id="main-nav-bar-template" type="text/x-handlebars-template">
         <span class="main-nav-bar">
-            <li><a href="#" class="nav-list" id="nav-elections">Elections</a></li>
-            {{#if election}}
-            <li><a href="#" class="nav-item" id="nav-election" data-id="{{ election.id }}" category="election">{{election.title}}</a></li>
-            <li><a href="#" class="nav-list" id="nav-races">Races</a></li>
-            {{/if}}
-            {{#if race}}
-            <li><a href="#" class="nav-item" id="nav-race" data-id="{{ race.id }}" category="race">{{race.title}}</a></li>
-            <li><a href="#" class="nav-list" id="nav-candidates">Candidates</a></li>
-            {{/if}}
-            {{#if candidate}}
-            <li><a href="#" class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}" category="candidate">{{candidate.title}}</a></li>
-            {{/if}}
+                <li>
+                <a href="#" class="nav-list" id="nav-elections">Elections</a>
+                </li>
+                {{#if election}}
+                <li>
+                <a href="#" class="nav-item" id="nav-election" data-id="{{ election.id }}" category="election">{{election.title}}</a></li>
+                <li><a href="#" class="nav-list" id="nav-races">Races</a></li>
+                {{/if}}
+                {{#if race}}
+                <li><a href="#" class="nav-item" id="nav-race" data-id="{{ race.id }}" category="race">{{race.title}}</a></li>
+                <li><a href="#" class="nav-list" id="nav-candidates">Candidates</a></li>
+                {{/if}}
+                {{#if candidate}}
+                <li><a href="#" class="nav-item" id="nav-candidate" data-id="{{ candidate.id }}" category="candidate">{{candidate.title}}</a></li>
+                {{/if}}
         </span>
     </script>
 
@@ -97,7 +101,11 @@
                     <a href="#" class="item-title" data-id="{{ id }}" category="{{ category }}">{{title}}</a>
                     <p class="item-short-descr" id="item-short-descr">{{description_short}}</p>
                 </div>
-                <div class="item-action"></div>
+                <div class="item-action">
+                    {{#if_equal category "candidate"}}
+                    <button class="button item-action-button candidate-select" data-id="{{ id }}" category="{{ category }}" index={{index}}>Select</button>
+                    {{/if_equal}}
+                </div>
             </li>
            {{/each}}
         </ul>
@@ -187,7 +195,6 @@
                     </table>
                     <div class="form-separate"></div>
                     </span>
-                    <!-- <input type="submit" id="form-submit" name="submit-item" value="{{title}}" /> -->
                     </form>
                 </div>
                 <div class="modal-footer">

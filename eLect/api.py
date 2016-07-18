@@ -891,11 +891,23 @@ def vote_put():
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
-
+    # Check if vote exists
     check_vote_id(data["id"])
+    # Check if candidate exists
+    check_cand_id(data["candidate_id"])
+    candidate = session.query(models.Candidate).filter(
+        models.Candidate.id == data["candidate_id"]).first()
+
 
     # Init Vote object with id=data["id"]
     vote = session.query(models.Vote).get(data["id"])
+
+    # Checks if election is still open
+    if not candidate.race.election.elect_open:
+        message = "Election with id {} is currently closed, and not accepting new votes.".format(
+            candidate.race.election.id)
+        data = json.dumps({"message": message})
+        return Response(data, 403, mimetype="application/json")
 
     # Update target vote
     for key, value in data.items():

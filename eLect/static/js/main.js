@@ -16,6 +16,7 @@ var eLect = function() {
                     description_short: "Online elections platform.",
                     category: "",
                 };
+    this.candidateSelect = [];
 
     this.clickActionBehavior();
 
@@ -35,6 +36,7 @@ var eLect = function() {
     this.responseListSource = $("#response-list-template").html();
     this.responseListTemplate = Handlebars.compile(this.responseListSource);
     this.responses = [];
+
 
     this.centerModal = $("#modal");
     this.fullDescrModalSource = $("#full-descr-template").html();
@@ -56,6 +58,7 @@ var eLect = function() {
     this.updateNavBar();
     this.renderViewActions();
 
+    
     this.clickActionBehavior();
 };
 
@@ -83,6 +86,12 @@ eLect.prototype.clickActionBehavior = function() {
 
     this.addItem = $("#action-add");
     this.addItem.click(this.onAddItemClicked.bind(this));
+
+    console.log("this.candidateSelect.length", this.candidateSelect.length);
+    if (this.candidateSelect.length > 0) {
+        this.candidateSelect.click(this.onCandidateSelected.bind(this));
+        console.log("this.candidateSelect.click assigned");
+    };
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -306,7 +315,35 @@ eLect.prototype.onNavItemClicked = function(event) {
     };
 };
 
-
+eLect.prototype.onCandidateSelected = function(event) {
+    console.log("onSelected");
+    var item = $(event.target);
+    var selectedItemIndex = item.attr("index");
+    // var defaultClasses = $(".response-item").attr("class");
+    // unselectedClasses = defaultClasses + " response-item-unselected";
+    // console.log("unselectedClasses", unselectedClasses);
+    $(".response-item").each(function(index, element) {
+        if (index != selectedItemIndex) {
+            $(element).addClass("response-item-unselected");
+            // $(element).css("opacity", '70%');
+            // $(element).fadeTo(600,0.3);
+            $(element).animate({backgroundColor: "#412825"});
+        };
+        console.log("response-item", index, element);
+    });
+    var selectedItem = $(".response-item")[selectedItemIndex];
+    selectedItem.selected = "true";
+    console.log("selected response", selectedItem);
+    // $(selectedItem).fadeTo(600,1);
+    // $(selectedItem).css("background-color", "#804e49");
+    $(selectedItem).animate({backgroundColor: "#804e49"});
+    // $(selectedItem).css("opacity", "100%");
+    // $(".response-item")[item.attr("index")].removeClass("response-item-unselected");
+    // item.selected = "true"
+    // $(item).css("class", defaultClasses);
+        // $(this.candidateSelect[i]).css("class", defaultClasses + " response-item-unselected");
+    // $(item).css("class", defaultClasses);
+};
 
 eLect.prototype.getObject = function(category, objectURL, callback) {
     var ajax = $.ajax(objectURL, {
@@ -359,6 +396,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
     for (i in this.responses) {
         console.log("response # " + i + ":" + this.responses[i]);
         this.responses[i].category = category;
+        this.responses[i].index = i;
     }
     // var categoryList = {
     //     category: category
@@ -381,6 +419,8 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
     this.updateNavBar();
     this.renderViewActions();
 
+    this.candidateSelect = $(".candidate-select");
+    console.log("this.candidateSelect", this.candidateSelect);
     // Goes last, to ensure all clickable things are made clicky
     this.clickActionBehavior();
 };

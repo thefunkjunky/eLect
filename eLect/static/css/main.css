@@ -70,10 +70,12 @@ h4 {
     padding-left: 15px;
     /*padding-right: 10px;*/
     list-style: none;
+    /*justify-content: space-between;*/
     align-items: center;
 }
 
 .main-nav-bar a.nav-list {
+    /*flex: 1;*/
     position: relative;
     text-decoration: none;
     padding: 3px;
@@ -81,7 +83,7 @@ h4 {
     color: white;
     background: #a6908d;
     border: 2px solid #c2e1f5;
-    display: block;
+    display: inline-block;
 }
 
 .main-nav-bar a.nav-list:before, .main-nav-bar a.nav-list:after {
@@ -201,7 +203,7 @@ a.nav-item {
     align-self: center;
 }
 
-a.button:link, a.button:visited {
+.button {
     /*flex: 1 0 auto;*/
     /*position: relative;*/
     display: block;
@@ -216,11 +218,11 @@ a.button:link, a.button:visited {
     border-radius: 20px;
 }
 
-a.button:hover {
+.button:hover {
     opacity: 0.5;
 } 
 
-a.button:active {
+.button:active {
     opacity: 0.7;
     background-color: #69a73f;
 }
@@ -259,6 +261,12 @@ a.button:active {
     /*align-items: flex-end;*/
     min-width: 50%;
 }
+
+.response-item-unselected {
+    /*opacity: 70%;*/
+
+}
+
 #avatar-small {
     flex: 0 0 80px;
     width: 80px;
@@ -281,22 +289,28 @@ a.item-title {
 }
 
 
-
 .item-short-descr {
     padding-left: 15px;
     margin: 3px;
 }
 
 .item-action {
-    flex: 0 1 120px;
-    width: 80px;
-    height: 50px;
-    background-color: #2b2f51;
+    /*flex: 0 1 120px;*/
+    /*width: 80px;*/
+    /*height: 50px;*/
+    /*background-color: #2b2f51;*/
     /*background: #a6908d;*/
     align-self: center;
-    border: 2px solid #E7DECD;
+    /*border: 2px solid #E7DECD;*/
     /*flex-wrap: true;*/
 }
+
+.item-action-button {
+    /*display: block;*/
+    flex: 1;
+    align-self: center;
+}
+
 
 .bottom-buttons {
     justify-content: flex-end;
