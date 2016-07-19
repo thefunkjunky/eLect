@@ -94,7 +94,7 @@
     <script id="response-list-template" type="text/x-handlebars-template">
         <ul class="view-responses">
             {{#each responses}}
-            <li class="response-item">
+            <li class="response-item" data-id={{ id }}>
                 <img id="avatar-small" src="{{icon_small_location}}" />
                 <div class="item-text">
                     <a href="#" class="item-title" data-id="{{ id }}" category="{{ category }}">{{title}}</a>

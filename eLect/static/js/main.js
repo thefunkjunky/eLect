@@ -335,6 +335,7 @@ eLect.prototype.onNavItemClicked = function(event) {
 eLect.prototype.onCandidateSelected = function(event) {
     console.log("onSelected");
     var item = $(event.target);
+    var itemDataId = item.attr("data-id");
     var selectedItemIndex = item.attr("index");
     // var defaultClasses = $(".response-item").attr("class");
     // unselectedClasses = defaultClasses + " response-item-unselected";
@@ -342,6 +343,7 @@ eLect.prototype.onCandidateSelected = function(event) {
     $(".response-item").each(function(index, element) {
         if (index != selectedItemIndex) {
             $(element).addClass("response-item-unselected");
+            $(element).itemID = null;
             // $(element).css("opacity", '70%');
             // $(element).fadeTo(600,0.3);
             $(element).animate({backgroundColor: "#412825"});
@@ -349,7 +351,8 @@ eLect.prototype.onCandidateSelected = function(event) {
         console.log("response-item", index, element);
     });
     var selectedItem = $(".response-item")[selectedItemIndex];
-    selectedItem.itemID = item.attr("data-id");
+    console.log("selectedItem", selectedItem);
+    console.log("itemDataId", itemDataId);
     selectedItem.id = "selected-response";
     selectedItem.value = 1;
     console.log("selected response", selectedItem);
@@ -364,10 +367,20 @@ eLect.prototype.onCandidateSelected = function(event) {
     // $(item).css("class", defaultClasses);
 };
 
+eLect.prototype.checkVoted = function(raceID, candidateID) {
+    if (raceID) {
+        var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
+    } else if (candidateID) {
+        var voteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
+    }
+    var vote = this.getVote(voteURL);
+    console.log("vote: ", vote);
+};
+
 eLect.prototype.onVoteButtonClicked = function(event) {
     var item = $(event.target);
     var selectedResponse = $("#selected-response");
-    var candidateID = selectedResponse.attr("itemID");
+    var candidateID = selectedResponse.attr("data-id");
     var value = selectedResponse.attr("value");
     var voteData = {
         value: value,
@@ -384,7 +397,16 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
         dataType: 'json'
     });
     ajax.done(this.onGetObjectDone.bind(this, category, callback));
-    ajax.fail(this.onFail.bind(this, "Getting parent object information"));
+    ajax.fail(this.onFail.bind(this, "Getting object information"));
+};
+
+eLect.prototype.getVote = function(voteURL) {
+    var ajax = $.ajax(voteURL, {
+        type: 'GET',
+        dataType: 'json'
+    });
+    ajax.done(this.onGetVoteDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "Getting vote object information"));
 };
 
 eLect.prototype.onGetObjectDone = function(category, callback, data) {
@@ -408,6 +430,9 @@ eLect.prototype.onGetObjectDone = function(category, callback, data) {
     };
 };
 
+eLect.prototype.onGetVoteDone = function(data) {
+    return data;
+};
 
 eLect.prototype.getResponseList = function(category, listURL) {
     this.listURL = listURL;
@@ -430,6 +455,12 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
         console.log("response # " + i + ":" + this.responses[i]);
         this.responses[i].category = category;
         this.responses[i].index = i;
+
+        if (this.currentViewCategory == "race") {
+            this.checkVoted(this.responses[i].id, null);
+        } else if (this.currentViewCategory == "candidate") {
+            this.checkVoted(null, this.responses[i].id);
+        };
     }
     // var categoryList = {
     //     category: category
@@ -492,6 +523,8 @@ eLect.prototype.postObject = function(postURL) {
 
 eLect.prototype.postVote = function(voteData, postURL) {
     console.log("voteData", voteData);
+    var data = voteData;
+    console.log("votedata json stringified", JSON.stringify(data));
     var ajax = $.ajax(postURL, {
         type: 'POST',
         contentType: "application/json; charset=utf-8",
@@ -508,8 +541,7 @@ eLect.prototype.onPostObjectDone = function() {
 };
 
 eLect.prototype.onPostVoteDone = function() {
-    this.category = "race";
-
+    this.racesButton.click();
 }
 
 

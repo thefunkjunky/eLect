@@ -102,6 +102,7 @@ class Race(Base):
         ForeignKey('elect_type.election_type'), 
         default=None)
     candidates = relationship("Candidate", backref="race", cascade="all, delete-orphan")
+    votes = relationship("Vote", backref="race", cascade="all, delete-orphan")
     results = relationship("Results", backref="race", cascade="all, delete-orphan")
 
 
@@ -279,8 +280,19 @@ class Vote(Base):
     last_modified = Column(DateTime, onupdate=datetime.datetime.utcnow())
     
     # Foreign relationships
-    candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    race_id = Column(Integer, ForeignKey('race.id'))
+    candidate_id = Column(Integer, ForeignKey('candidate.id'), nullable=False)
+
+    def __init__(self, *args, **kwargs):
+        """Things that need to be done on init, like assign race_id"""
+
+        super(Race, self).__init__(*args, **kwargs)
+        params = dict((k, v) for k, v in kwargs.items())
+
+        self.candidate = session.query(Candidate).filter(
+            Candidate.id == params["candidate_id"])
+        self.race_id = self.candidate.race_id
 
     def as_dictionary(self):
         vote = {
@@ -288,6 +300,7 @@ class Vote(Base):
         "value": self.value,
         "candidate_id": self.candidate_id,
         "user_id": self.user_id,
+        "race_id": self.race_id,
         "start_date": self.start_date,
         "last_modified": self.last_modified,
         }

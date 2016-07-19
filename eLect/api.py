@@ -455,9 +455,10 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
     data = json.dumps(candidate.as_dictionary(), default=json_serial)
     return Response(data, 200, mimetype="application/json")
 
+@app.route("/api/races/<int:race_id>/votes", 
+    methods=["GET"])
 @app.route("/api/candidates/<int:cand_id>/votes", 
     methods=["GET"])
-@app.route("/api/votes", methods=["GET"])
 @decorators.accept("application/json")
 def votes_get(elect_id=None, race_id=None, cand_id=None):
     """ Returns a list of votes cast """
@@ -467,13 +468,19 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
         # Finds, checks, and returns a list of votes cast for candidate
         votes = session.query(models.Vote).filter(
             models.Vote.candidate_id == cand_id)
-    else:
-        votes = session.query(models.Vote)
+    elif race_id:
+        check_race_id(race_id)
+        votes = session.query(models.Vote).filter(
+            models.Vote.race_id == race_id)
 
     votes = votes.order_by(models.Vote.id)
 
     if not votes:
-        message = "Could not find any votes cast for candidate with id #{}".format(cand_id)
+        if cand_id:
+            category = "candidate"
+        elif race_id: 
+            category = "race"
+        message = "Could not find any votes cast for {} with id #{}".format(category, cand_id)
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
@@ -483,19 +490,40 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
 
 @app.route("/api/candidates/<int:cand_id>/votes/<int:vote_id>", 
     methods=["GET"])
+@app.route("/api/races/<int:race_id>/votes/<int:vote_id>", 
+    methods=["GET"])
+@app.route("/api/candidates/<int:cand_id>/votes/user/<int:user_id>", 
+    methods=["GET"])
+@app.route("/api/races/<int:race_id>/votes/user/<int:user_id>", 
+    methods=["GET"])
 @app.route("/api/votes/<int:vote_id>", methods=["GET"])
 @decorators.accept("application/json")
-def vote_get(vote_id, elect_id=None, race_id=None, cand_id=None):
+def vote_get(vote_id=None, elect_id=None, race_id=None, cand_id=None, user_id=None):
     """ Returns information regarding a vote cast """
+    if race_id:
+        check_race_id(race_id)
     if cand_id:
         # Check for candidate's existence
         check_cand_id(cand_id)
+    if user_id:
+        check_user_id(user_id)
+    if vote_id:
+        check_vote_id(vote_id)
 
-    # Finds, checks, and returns a list of votes cast for candidate
-    vote = session.query(models.Vote).get(vote_id)
+    # Returns a vote
+    if user_id & race_id:
+        vote = session.query(models.Vote).filter(
+            models.Vote.race_id == race_id,
+            models.Vote.user_id == user_id).first()
+    elif user_id & cand_id:
+        vote = session.query(models.Vote).filter(
+            models.Vote.candidate_id == cand_id,
+            models.Vote.user_id == user_id).first()
+    else:
+        vote = session.query(models.Vote).get(vote_id)
 
     if not vote:
-        message = "Could not find vote with id #{}".format(vote_id)
+        message = "Could not find vote"
         data = json.dumps({"message": message})
         return Response(data, 404, mimetype="application/json")
 
