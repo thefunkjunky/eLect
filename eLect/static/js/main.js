@@ -373,15 +373,16 @@ eLect.prototype.checkVoted = function(raceID, candidateID) {
     } else if (candidateID) {
         var voteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
     }
-    var vote = this.getVote(voteURL);
-    console.log("vote: ", vote);
+    var vote = this.getVote(voteURL, this.returnData);
+    var isVoted = (typeof vote !== 'undefined')
+    console.log("vote, wheter not defined ", vote, isVoted);
 };
 
 eLect.prototype.onVoteButtonClicked = function(event) {
     var item = $(event.target);
     var selectedResponse = $("#selected-response");
-    var candidateID = selectedResponse.attr("data-id");
-    var value = selectedResponse.attr("value");
+    var candidateID = parseInt(selectedResponse.attr("data-id"));
+    var value = parseInt(selectedResponse.attr("value"));
     var voteData = {
         value: value,
         candidate_id: candidateID,
@@ -389,6 +390,11 @@ eLect.prototype.onVoteButtonClicked = function(event) {
     };
     var postURL = "/api/votes"
     this.postVote(voteData, postURL);
+};
+
+eLect.prototype.returnData = function(data) {
+    console.log("return data", data);
+    return data;
 };
 
 eLect.prototype.getObject = function(category, objectURL, callback) {
@@ -400,12 +406,13 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
     ajax.fail(this.onFail.bind(this, "Getting object information"));
 };
 
-eLect.prototype.getVote = function(voteURL) {
+eLect.prototype.getVote = function(voteURL, callback) {
+    console.log("getVote callback", callback);
     var ajax = $.ajax(voteURL, {
         type: 'GET',
         dataType: 'json'
     });
-    ajax.done(this.onGetVoteDone.bind(this));
+    ajax.done(this.onGetVoteDone.bind(this, callback));
     ajax.fail(this.onFail.bind(this, "Getting vote object information"));
 };
 
@@ -430,8 +437,13 @@ eLect.prototype.onGetObjectDone = function(category, callback, data) {
     };
 };
 
-eLect.prototype.onGetVoteDone = function(data) {
-    return data;
+eLect.prototype.onGetVoteDone = function(callback, data) {
+    // send a this.returnData as callback to work
+    console.log("getVote callbackDone", callback);
+    if (callback) {
+        var voteData = callback.bind(this)(data);
+        return voteData;
+    }
 };
 
 eLect.prototype.getResponseList = function(category, listURL) {
@@ -457,6 +469,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
         this.responses[i].index = i;
 
         if (this.currentViewCategory == "race") {
+            // console.log("checkvoted return:" this.checkVoted(this.responses[i].id, null));
             this.checkVoted(this.responses[i].id, null);
         } else if (this.currentViewCategory == "candidate") {
             this.checkVoted(null, this.responses[i].id);
@@ -524,7 +537,7 @@ eLect.prototype.postObject = function(postURL) {
 eLect.prototype.postVote = function(voteData, postURL) {
     console.log("voteData", voteData);
     var data = voteData;
-    console.log("votedata json stringified", JSON.stringify(data));
+    console.log("data json stringified", JSON.stringify(data));
     var ajax = $.ajax(postURL, {
         type: 'POST',
         contentType: "application/json; charset=utf-8",

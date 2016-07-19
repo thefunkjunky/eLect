@@ -460,7 +460,7 @@ def candidate_get(cand_id, elect_id=None, race_id=None):
 @app.route("/api/candidates/<int:cand_id>/votes", 
     methods=["GET"])
 @decorators.accept("application/json")
-def votes_get(elect_id=None, race_id=None, cand_id=None):
+def votes_get(race_id=None, cand_id=None):
     """ Returns a list of votes cast """
     if cand_id:
         # Check for candidate's existence
@@ -472,6 +472,10 @@ def votes_get(elect_id=None, race_id=None, cand_id=None):
         check_race_id(race_id)
         votes = session.query(models.Vote).filter(
             models.Vote.race_id == race_id)
+    else:
+        message = "No candidate_id or race_id provided"
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
 
     votes = votes.order_by(models.Vote.id)
 
@@ -511,11 +515,11 @@ def vote_get(vote_id=None, elect_id=None, race_id=None, cand_id=None, user_id=No
         check_vote_id(vote_id)
 
     # Returns a vote
-    if user_id & race_id:
+    if any([user_id, race_id]):
         vote = session.query(models.Vote).filter(
             models.Vote.race_id == race_id,
             models.Vote.user_id == user_id).first()
-    elif user_id & cand_id:
+    elif any([user_id, cand_id]):
         vote = session.query(models.Vote).filter(
             models.Vote.candidate_id == cand_id,
             models.Vote.user_id == user_id).first()
@@ -741,17 +745,19 @@ def vote_post():
     """ Add new vote """
     data = request.json
 
+    check_cand_id(data["candidate_id"])
+    check_user_id(data["user_id"])
     # Validate header data vs. schema
     try:
         validate(data, vote_POST_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
+    
+    candidate = session.query(models.Candidate).get(
+        data["candidate_id"])
+    race = candidate.race
 
-    # Check if candidate exists
-    check_cand_id(data["candidate_id"])
-    candidate = session.query(models.Candidate).filter(
-        models.Candidate.id == data["candidate_id"]).first()
 
     # Check if election is still currently open
     if not candidate.race.election.elect_open:
@@ -760,14 +766,25 @@ def vote_post():
         data = json.dumps({"message": message})
         return Response(data, 403, mimetype="application/json")
 
-    # Check if user already voted for this candidate
-    existing_votes = session.query(models.Vote).filter(
+    # Check if user already voted for this candidate / race
+    existing_candidate_votes = session.query(models.Vote).filter(
         models.Vote.user_id == data["user_id"],
         models.Vote.candidate_id == data["candidate_id"]).count()
-    if existing_votes > 0:
+    existing_race_votes = session.query(models.Vote).filter(
+        models.Vote.user_id == data["user_id"],
+        models.Vote.race_id == race.id).count()
+
+
+    if existing_candidate_votes > 0:
         message = "User with id {} has already voted for candidate with id {}.".format(
             data["user_id"],
             data["candidate_id"])
+        data = json.dumps({"message": message})
+        return Response(data, 403, mimetype="application/json")
+    if existing_race_votes > 0 and race.election_type not in race._ranking_types:
+        message = "User with id {} has already voted in race id {}.".format(
+            data["user_id"],
+            race.id)
         data = json.dumps({"message": message})
         return Response(data, 403, mimetype="application/json")
 

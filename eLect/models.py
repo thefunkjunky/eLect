@@ -287,11 +287,12 @@ class Vote(Base):
     def __init__(self, *args, **kwargs):
         """Things that need to be done on init, like assign race_id"""
 
-        super(Race, self).__init__(*args, **kwargs)
+        super(Vote, self).__init__(*args, **kwargs)
         params = dict((k, v) for k, v in kwargs.items())
+        print(params)
 
-        self.candidate = session.query(Candidate).filter(
-            Candidate.id == params["candidate_id"])
+        self.candidate = session.query(Candidate).get(
+            params["candidate_id"])
         self.race_id = self.candidate.race_id
 
     def as_dictionary(self):
