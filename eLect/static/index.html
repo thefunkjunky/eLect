@@ -39,13 +39,12 @@
             <div id="view-actions">
                 <!-- action-buttons-template goes here -->
             </div>
-            <ul id="response-list">
+            <div id="response-list">
                 <!-- response templates go here -->
-            </ul>
-            <span class="action-buttons bottom-buttons">
-                    <li><a href="#" class="button bottom-button" id="button-vote">Vote</a></li>
-                    <li><a href="#" class="button bottom-button" id="button-tally">Tally</a></li>
-            </span>
+            </div>
+            <div id="bottom-actions">
+                <!-- response templates go here -->
+            </div>
         </div>
     </div>
     <div class="footer">
@@ -111,6 +110,18 @@
         </ul>
     </script>
     
+    <!-- Bottom action buttons template -->
+    <script id="bottom-actions-template" type="text/x-handlebars-template">
+        <span class="action-buttons bottom-buttons">
+                {{#if_equal category "candidate"}}
+                <li><a href="#" class="button bottom-button" id="button-vote">Vote</a></li>
+                {{/if_equal}}
+                {{#if_equal category "race"}}
+                <li><a href="#" class="button bottom-button" id="button-tally">Tally</a></li>
+                {{/if_equal}}
+        </span>
+    </script>
+
     <!-- Generic center information pop-up ("Modal" window) -->
     <script id="full-descr-template" type="text/x-handlebars-template">
         <div class="center-modal" id="full-descr-modal">

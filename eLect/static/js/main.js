@@ -17,6 +17,7 @@ var eLect = function() {
                     category: "",
                 };
     this.candidateSelect = [];
+    this.userID = 1;
 
     this.clickActionBehavior();
 
@@ -36,6 +37,10 @@ var eLect = function() {
     this.responseListSource = $("#response-list-template").html();
     this.responseListTemplate = Handlebars.compile(this.responseListSource);
     this.responses = [];
+
+    this.bottomActions = $("#bottom-actions");
+    this.bottomActionsSource = $("#bottom-actions-template").html();
+    this.bottomActionsTemplate = Handlebars.compile(this.bottomActionsSource);
 
 
     this.centerModal = $("#modal");
@@ -57,6 +62,7 @@ var eLect = function() {
     this.renderViewTitleBar();
     this.updateNavBar();
     this.renderViewActions();
+    this.renderBottomActions();
 
     
     this.clickActionBehavior();
@@ -92,6 +98,9 @@ eLect.prototype.clickActionBehavior = function() {
         this.candidateSelect.click(this.onCandidateSelected.bind(this));
         console.log("this.candidateSelect.click assigned");
     };
+
+    this.voteButton = $("#button-vote");
+    this.voteButton.click(this.onVoteButtonClicked.bind(this));
 
     // console.log($("#responses"));
     // $("#responses").on("click", ".item-title",
@@ -159,12 +168,16 @@ eLect.prototype.renderViewActions = function() {
     var viewActions = $(this.viewActionsTemplate(context));
     this.viewActions.replaceWith(viewActions);
     this.viewActions = viewActions;
+};
 
-    // if (this.currentViewCategory = "election") {
-    //     console.log("if currentview = election has been called.");
-    //     $("#action-add").css("align-items", "center");
-    // };
-}
+eLect.prototype.renderBottomActions = function() {
+    var context = {
+        category: this.currentViewCategory,
+    };
+    var bottomActions = $(this.bottomActionsTemplate(context));
+    this.bottomActions.replaceWith(bottomActions);
+    this.bottomActions = bottomActions;
+};
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
     var category = "election";
@@ -268,12 +281,8 @@ eLect.prototype.onCenterModalCloseClicked = function(event) {
 //     };
 // };
 
-
-eLect.prototype.onItemClicked = function(event) {
-    console.log("onItemClicked called");
-    var item = $(event.target);
+eLect.prototype.selectView = function (item) {
     var category = item.attr("category");
-    console.log("onItemClicked item:", item);
     if (category == "election") {
         var objectURL = "/api/elections/" + item.attr("data-id");
         this.getObject(category, objectURL);
@@ -292,6 +301,14 @@ eLect.prototype.onItemClicked = function(event) {
         var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL, this.onRenderCenterModal);
     };
+}
+
+
+eLect.prototype.onItemClicked = function(event) {
+    console.log("onItemClicked called");
+    var item = $(event.target);
+    console.log("onItemClicked item:", item);
+    this.selectView(item);
 };
 
 eLect.prototype.onNavItemClicked = function(event) {
@@ -332,7 +349,9 @@ eLect.prototype.onCandidateSelected = function(event) {
         console.log("response-item", index, element);
     });
     var selectedItem = $(".response-item")[selectedItemIndex];
-    selectedItem.selected = "true";
+    selectedItem.itemID = item.attr("data-id");
+    selectedItem.id = "selected-response";
+    selectedItem.value = 1;
     console.log("selected response", selectedItem);
     // $(selectedItem).fadeTo(600,1);
     // $(selectedItem).css("background-color", "#804e49");
@@ -343,6 +362,20 @@ eLect.prototype.onCandidateSelected = function(event) {
     // $(item).css("class", defaultClasses);
         // $(this.candidateSelect[i]).css("class", defaultClasses + " response-item-unselected");
     // $(item).css("class", defaultClasses);
+};
+
+eLect.prototype.onVoteButtonClicked = function(event) {
+    var item = $(event.target);
+    var selectedResponse = $("#selected-response");
+    var candidateID = selectedResponse.attr("itemID");
+    var value = selectedResponse.attr("value");
+    var voteData = {
+        value: value,
+        candidate_id: candidateID,
+        user_id: this.userID,
+    };
+    var postURL = "/api/votes"
+    this.postVote(voteData, postURL);
 };
 
 eLect.prototype.getObject = function(category, objectURL, callback) {
@@ -418,6 +451,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
     this.updateViewItems();
     this.updateNavBar();
     this.renderViewActions();
+    this.renderBottomActions();
 
     this.candidateSelect = $(".candidate-select");
     console.log("this.candidateSelect", this.candidateSelect);
@@ -456,10 +490,28 @@ eLect.prototype.postObject = function(postURL) {
     ajax.fail(this.onFail.bind(this, "POST failed...")); 
 };
 
+eLect.prototype.postVote = function(voteData, postURL) {
+    console.log("voteData", voteData);
+    var ajax = $.ajax(postURL, {
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: JSON.stringify(data),
+    });
+    ajax.done(this.onPostVoteDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "POST failed...")); 
+};
+
 eLect.prototype.onPostObjectDone = function() {
     this.onCenterModalCloseClicked();
     this.getResponseList(this.currentViewCategory, this.listURL);
 };
+
+eLect.prototype.onPostVoteDone = function() {
+    this.category = "race";
+
+}
+
 
 eLect.prototype.updateViewItems = function() {
     var context = {
