@@ -402,7 +402,10 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
     ajax.fail(this.onFail.bind(this, "Getting object information"));
 };
 
-eLect.prototype.getVote = function(raceID, candID, callback) {
+eLect.prototype.getVote = function(response, candID, callback) {
+    var raceID = response.id;
+    console.log("getvote callback", callback);
+    callback.bind(this);
     if (raceID) {
         var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
     } else if (candID) {
@@ -410,10 +413,27 @@ eLect.prototype.getVote = function(raceID, candID, callback) {
     }
     var ajax = $.ajax(voteURL, {
         type: 'GET',
-        dataType: 'json'
+        dataType: 'json',
     });
-    ajax.done(this.onGetVoteDone.bind(this, callback));
+    // ajax.done(this.onGetVoteDone.bind(this, callback));
     ajax.fail(this.onFail.bind(this, "Getting vote object information"));
+
+    // if (ajax.responseJSON) {
+    //     return ajax.responseJSON;
+    // } else {
+    //     return null;
+    // };
+    // console.log("ajax", ajax);
+    // console.log("ajax.responseJSON", ajax.responseJSON);
+
+    return ajax.done(function(data, callback){
+        if (data) {
+            console.log("callback, data", callback, data);
+            return [data, callback];
+        } else {
+            return null;
+        }
+    });
 };
 
 eLect.prototype.onGetObjectDone = function(category, callback, data) {
@@ -444,7 +464,8 @@ eLect.prototype.onGetVoteDone = function(callback, data) {
         var isVote = callback.bind(this)(data);
         console.log("isVote", isVote);
         return isVote;
-    }
+    };
+    return data;
 };
 
 eLect.prototype.getResponseList = function(category, listURL) {
@@ -471,8 +492,16 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
 
         if (this.currentViewCategory == "race") {
             // console.log("checkVote return:" this.checkVote(this.responses[i].id, null));
-            var isVote = this.getVote(this.responses[i].id, null, this.checkVote);
-            console.log("isVote after main call", isVote);
+            this.getVote(this.responses[i], null, this.checkVote)
+            .done(function (data, callback) {
+                console.log("callback", callback);
+                console.log("data", data);
+                console.log("this.response", this.responses[i])
+
+                // var isVote = this.checkVote(data);
+                // console.log("isVote", isVote);
+            });
+            // console.log("isVote after main call", isVote);
         } else if (this.currentViewCategory == "candidate") {
             var isVote = this.getVote(null, this.responses[i].id, this.checkVote);
             console.log("isVote after main call", isVote);

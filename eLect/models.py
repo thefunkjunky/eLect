@@ -181,7 +181,6 @@ class Race(Base):
         allows candidate rankings (e.g.: Schulze, IRV, etc),
         runs check_n_fix_valuerange() to ensure vote value range is functional"""
 
-        ranking_types = ["Schulze"]
         if election_type in self._ranking_types:
             self.check_n_fix_valuerange()
         else:
