@@ -197,7 +197,7 @@ eLect.prototype.onRacesButtonClicked = function(event) {
 
 eLect.prototype.onCandidatesButtonClicked = function(event) {
     var category = "candidate";
-    var listURL = "/api/races/" + this.race.id + "/candidates/";
+    var listURL = "/api/races/" + this.race.id + "/candidates";
     this.candidate = null;
     this.getResponseList(category, listURL);
 };
