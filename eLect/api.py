@@ -515,11 +515,11 @@ def vote_get(vote_id=None, elect_id=None, race_id=None, cand_id=None, user_id=No
         check_vote_id(vote_id)
 
     # Returns a vote
-    if any([user_id, race_id]):
+    if all([user_id, race_id]):
         vote = session.query(models.Vote).filter(
             models.Vote.race_id == race_id,
             models.Vote.user_id == user_id).first()
-    elif any([user_id, cand_id]):
+    elif all([user_id, cand_id]):
         vote = session.query(models.Vote).filter(
             models.Vote.candidate_id == cand_id,
             models.Vote.user_id == user_id).first()
@@ -773,7 +773,6 @@ def vote_post():
     existing_race_votes = session.query(models.Vote).filter(
         models.Vote.user_id == data["user_id"],
         models.Vote.race_id == race.id).count()
-
 
     if existing_candidate_votes > 0:
         message = "User with id {} has already voted for candidate with id {}.".format(

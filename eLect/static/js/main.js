@@ -405,8 +405,8 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
 eLect.prototype.getVote = function(raceID, candID, callback) {
     if (raceID) {
         var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
-    } else if (candidateID) {
-        var voteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
+    } else if (candID) {
+        var voteURL = "/api/candidates/" + candID + "/votes/user/" + this.userID;
     }
     var ajax = $.ajax(voteURL, {
         type: 'GET',
@@ -477,7 +477,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
             var isVote = this.getVote(null, this.responses[i].id, this.checkVote);
             console.log("isVote after main call", isVote);
         };
-    }
+    };
     // var categoryList = {
     //     category: category
     // };
