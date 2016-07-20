@@ -367,15 +367,11 @@ eLect.prototype.onCandidateSelected = function(event) {
     // $(item).css("class", defaultClasses);
 };
 
-eLect.prototype.checkVoted = function(raceID, candidateID) {
-    if (raceID) {
-        var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
-    } else if (candidateID) {
-        var voteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
-    }
-    var vote = this.getVote(voteURL, this.returnData);
-    var isVoted = (typeof vote !== 'undefined')
-    console.log("vote, wheter not defined ", vote, isVoted);
+eLect.prototype.checkVote = function(data) {
+    var vote = data;
+    var isVoted = (typeof vote !== 'undefined');
+    console.log("vote, isVote ", vote, isVoted);
+    return isVoted;
 };
 
 eLect.prototype.onVoteButtonClicked = function(event) {
@@ -406,8 +402,12 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
     ajax.fail(this.onFail.bind(this, "Getting object information"));
 };
 
-eLect.prototype.getVote = function(voteURL, callback) {
-    console.log("getVote callback", callback);
+eLect.prototype.getVote = function(raceID, candID, callback) {
+    if (raceID) {
+        var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
+    } else if (candidateID) {
+        var voteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
+    }
     var ajax = $.ajax(voteURL, {
         type: 'GET',
         dataType: 'json'
@@ -438,11 +438,12 @@ eLect.prototype.onGetObjectDone = function(category, callback, data) {
 };
 
 eLect.prototype.onGetVoteDone = function(callback, data) {
-    // send a this.returnData as callback to work
+    // send a this.checkVote as callback to work
     console.log("getVote callbackDone", callback);
     if (callback) {
-        var voteData = callback.bind(this)(data);
-        return voteData;
+        var isVote = callback.bind(this)(data);
+        console.log("isVote", isVote);
+        return isVote;
     }
 };
 
@@ -469,10 +470,12 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
         this.responses[i].index = i;
 
         if (this.currentViewCategory == "race") {
-            // console.log("checkvoted return:" this.checkVoted(this.responses[i].id, null));
-            this.checkVoted(this.responses[i].id, null);
+            // console.log("checkVote return:" this.checkVote(this.responses[i].id, null));
+            var isVote = this.getVote(this.responses[i].id, null, this.checkVote);
+            console.log("isVote after main call", isVote);
         } else if (this.currentViewCategory == "candidate") {
-            this.checkVoted(null, this.responses[i].id);
+            var isVote = this.getVote(null, this.responses[i].id, this.checkVote);
+            console.log("isVote after main call", isVote);
         };
     }
     // var categoryList = {
