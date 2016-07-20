@@ -369,19 +369,13 @@ eLect.prototype.onCandidateSelected = function(event) {
 
 eLect.prototype.alreadyVoted = function(voteURL, response) {
     $.getJSON(voteURL).done(function(data){
-            response.alreadyVoted = true;
+            response.alreadyvoted = "true";
         }).fail(function() {
-            response.alreadyVoted = false;
+            response.alreadyvoted = "false";
         });
 };
 
-function alreadyVoted(voteURL, response) { 
-    $.getJSON(voteURL).done(function(data){
-        response.alreadyVoted = true;
-    }).fail(function() {
-        response.alreadyVoted = false;
-    });
-};
+
 
 eLect.prototype.onVoteButtonClicked = function(event) {
     var item = $(event.target);
