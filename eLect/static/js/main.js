@@ -367,11 +367,20 @@ eLect.prototype.onCandidateSelected = function(event) {
     // $(item).css("class", defaultClasses);
 };
 
-eLect.prototype.checkVote = function(data) {
-    var vote = data;
-    var isVoted = (typeof vote !== 'undefined');
-    console.log("vote, isVote ", vote, isVoted);
-    return isVoted;
+eLect.prototype.alreadyVoted = function(voteURL, response) {
+    $.getJSON(voteURL).done(function(data){
+            response.alreadyVoted = true;
+        }).fail(function() {
+            response.alreadyVoted = false;
+        });
+};
+
+function alreadyVoted(voteURL, response) { 
+    $.getJSON(voteURL).done(function(data){
+        response.alreadyVoted = true;
+    }).fail(function() {
+        response.alreadyVoted = false;
+    });
 };
 
 eLect.prototype.onVoteButtonClicked = function(event) {
@@ -492,42 +501,12 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
 
         if (this.currentViewCategory == "race") {
             var voteURL = '/api/races/'+this.responses[i].id + '/votes/user/' + this.userID;
-            function alreadyVoted(voteURL, callback, response) { 
-                $.getJSON(voteURL).done(function(data){
-                // console.log("checkvote callback", callback);
-                // console.log("checkvote on data", callback.bind(this)(data));
-                // console.log("response", response);
-                response.alreadyVoted = true;
-
-                // var isVote = callback.bind(this)(data);
-                // var isVote = this.checkVote(data);
-                // return isVote;
-            }).fail(function() {
-                console.log("vote GET failed");
-                response.alreadyVoted = false;
-            }).always(function() {
-                console.log("final response", response);
-            });
-            };
-            alreadyVoted(voteURL, this.checkVote, this.responses[i]);
-            // console.log("checkVote return:" this.checkVote(this.responses[i].id, null));
-            // this.getVote(this.responses[i], null, this.checkVote)
-            // .done(function (data, callback) {
-            //     console.log("callback", callback);
-            //     console.log("data", data);
-            //     console.log("this.response", this.responses[i])
-            //     voteData = data;
-
-
-            //     // var isVote = this.checkVote(data);
-            //     // console.log("isVote", isVote);
-            // });
-            // console.log("isVote after main call", isVote);
-            // console.log("voteData after main call", voteData);
+            this.alreadyVoted(voteURL, this.responses[i]);
             console.log("final this.response", this.responses[i]);
         } else if (this.currentViewCategory == "candidate") {
-            var isVote = this.getVote(null, this.responses[i].id, this.checkVote);
-            console.log("isVote after main call", isVote);
+            var voteURL = '/api/candidates/'+this.responses[i].id + '/votes/user/' + this.userID;
+            this.alreadyVoted(voteURL, this.responses[i]);
+            console.log("final this.response", this.responses[i]);
         };
     };
     // var categoryList = {
