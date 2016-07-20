@@ -367,11 +367,17 @@ eLect.prototype.onCandidateSelected = function(event) {
     // $(item).css("class", defaultClasses);
 };
 
-eLect.prototype.alreadyVoted = function(voteURL, response) {
+eLect.prototype.alreadyVoted = function(voteURL, response, race) {
     $.getJSON(voteURL).done(function(data){
-            response.alreadyvoted = "true";
+            response.alreadyvoted = true;
+            if (race) {
+            race.alreadyvoted = true;
+            }
         }).fail(function() {
-            response.alreadyvoted = "false";
+            response.alreadyvoted = false;
+            if (race) {
+            race.alreadyvoted = false;
+            }
         });
 };
 
@@ -499,8 +505,10 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
             console.log("final this.response", this.responses[i]);
         } else if (this.currentViewCategory == "candidate") {
             var voteURL = '/api/candidates/'+this.responses[i].id + '/votes/user/' + this.userID;
-            this.alreadyVoted(voteURL, this.responses[i]);
+            this.alreadyVoted(voteURL, this.responses[i], this.race);
             console.log("final this.response", this.responses[i]);
+            
+            console.log("current race: ", this.race);
         };
     };
     // var categoryList = {
