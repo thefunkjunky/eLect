@@ -51,6 +51,10 @@ h4 {
     font-size: 110%;
 }
 
+ul {
+    list-style: none;
+}
+
 .title-bar {
     /*display: flex;*/
     /*flex-wrap: wrap;*/
@@ -236,7 +240,7 @@ a.nav-item {
     /*overflow-y: scroll;*/
     border: 2px solid #E7DECD;
     margin: 10px;
-    padding-left: 8px;
+    padding-left: 0px;
     /*max-height: 500px;*/
     /*width: 90%;*/
     min-width: 70%;
@@ -294,15 +298,18 @@ a.item-title {
     margin: 3px;
 }
 
-.item-action {
-    /*flex: 0 1 120px;*/
-    /*width: 80px;*/
-    /*height: 50px;*/
-    /*background-color: #2b2f51;*/
-    /*background: #a6908d;*/
+.item-actions {
     align-self: center;
-    /*border: 2px solid #E7DECD;*/
-    /*flex-wrap: true;*/
+}
+
+.item-action-ul {
+    display: inline;
+    padding-left: 0px;
+}
+
+.item-action-li {
+    display: inline;
+    float: left;
 }
 
 .item-action-button {

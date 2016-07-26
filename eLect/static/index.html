@@ -100,10 +100,17 @@
                     <a href="#" class="item-title" data-id="{{ id }}" category="{{ category }}">{{title}}</a>
                     <p class="item-short-descr" id="item-short-descr">{{description_short}}</p>
                 </div>
-                <div class="item-action">
+                <div class="item-actions">
+                    <ul class="item-action-ul">
                     {{#if_equal category "candidate"}}
-                    <button class="button item-action-button candidate-select" data-id="{{ id }}" category="{{ category }}" index={{index}}>Select</button>
+                    <li class="item-action-li">
+                        <button class="button item-action-button candidate-select" data-id="{{ id }}" category="{{ category }}" index={{index}}>Select</button>
+                    </li>
                     {{/if_equal}}
+                    <li class="item-action-li">
+                        <button class="button item-action-button item-edit" data-id="{{ id }}" category="{{ category }}" index={{index}}>Edit</button>
+                    </li>
+                    </ul>
                 </div>
             </li>
            {{/each}}
@@ -158,11 +165,11 @@
                                 <ul class="form-elements">
                                     <li>
                                         <p>Title: </p>
-                                        <input type="text" name="title" size="30" maxlength="45" required/>
+                                        <input type="text" name="title" value="{{ titleValue }}" size="30" maxlength="45" required/>
                                     </li>
                                     <li>
                                         <p>Short Description: </p>
-                                        <textarea name="description_short" cols="40" rows="3" maxlength="1000"></textarea>
+                                        <textarea name="description_short" value="{{ shortValue }}"cols="40" rows="3" maxlength="1000"></textarea>
                                     </li>
                                     {{#if_equal category "election"}}
                                     <li>
@@ -170,7 +177,7 @@
                                         <select name="default_election_type" id="elect-type-dropdown">
                                             <option value="WTA">Winner-Take-All</option>
                                             <option value="Proportional">Proportional</option>
-                                            <option value="Schulze">Schulze (Condorcent)</option>
+                                            <option value="Schulze">Schulze (Condorcet)</option>
                                         </select>
                                         
                                     </li>
@@ -182,7 +189,7 @@
                                 <select name="election_type" id="elect-type-dropdown">
                                         <option value="WTA">Winner-Take-All</option>
                                         <option value="Proportio modal-closenal">Proportional</option>
-                                        <option value="Schulze">Schulze (Condorcent)</option>
+                                        <option value="Schulze">Schulze (Condorcet)</option>
                                 </select>
                                 </li>
                                 {{/if_equal}}
@@ -197,7 +204,7 @@
                                 <li>
                                     <p>Long Description: 
                                     </p>
-                                    <textarea name="description_long" cols="50" rows="10" maxlength="1000"></textarea>
+                                    <textarea name="description_long" value="{{ longValue }}"cols="50" rows="10" maxlength="1000"></textarea>
                                 </li>
                                 </ul>
                                 
