@@ -106,6 +106,7 @@
                 <div class="item-actions">
                     <ul class="item-action-ul">
                     {{#if_equal category "candidate"}}
+                    <input type="hidden" class="form-response-value" value="0">
                     <li class="item-action-li">
                         <button class="button item-action-button candidate-select" data-id="{{ id }}" category="{{ category }}" index={{index}}>Select</button>
                     </li>

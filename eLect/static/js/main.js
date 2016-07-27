@@ -443,25 +443,40 @@ eLect.prototype.onCandidateSelected = function(event) {
     var item = $(event.target);
     var itemDataId = item.attr("data-id");
     var selectedItemIndex = item.attr("index");
+
+
+    var selectedValue = 1;
+
+    console.log("this.race", this.race);
+
+    if (this.race.alreadyvoted == true) {
+        var selectedColor = "#cc7066";
+        var unSelectedColor = "#86362d";
+    } else {
+        var selectedColor = "#804e49";
+        var unSelectedColor = "#412825";
+    };
+
     // var defaultClasses = $(".response-item").attr("class");
     // unselectedClasses = defaultClasses + " response-item-unselected";
     // console.log("unselectedClasses", unselectedClasses);
     $(".response-item").each(function(index, element) {
+
         if (index != selectedItemIndex) {
             $(element).addClass("response-item-unselected");
             $(element).itemID = null;
             // $(element).css("opacity", '70%');
             // $(element).fadeTo(600,0.3);
-            $(element).animate({backgroundColor: "#412825"});
+            $(element).animate({backgroundColor: unSelectedColor});
         };
     });
     var selectedItem = $(".response-item")[selectedItemIndex];
     selectedItem.id = "selected-response";
-    selectedItem.value = 1;
+    selectedItem.value = selectedValue;
     console.log("selected response", selectedItem);
     // $(selectedItem).fadeTo(600,1);
     // $(selectedItem).css("background-color", "#804e49");
-    $(selectedItem).animate({backgroundColor: "#804e49"});
+    $(selectedItem).animate({backgroundColor: selectedColor});
     // $(selectedItem).css("opacity", "100%");
     // $(".response-item")[item.attr("index")].removeClass("response-item-unselected");
     // item.selected = "true"
@@ -471,17 +486,18 @@ eLect.prototype.onCandidateSelected = function(event) {
 };
 
 eLect.prototype.alreadyVoted = function(voteURL, response, race, callback) {
-    $.getJSON(voteURL).done(function(data){
+    $.getJSON(voteURL).done((data) => {
             response.alreadyvoted = true;
             if (race) {
             race.alreadyvoted = true;
             };
-        }).fail(function() {
+        }).fail(() => {
             response.alreadyvoted = false;
-            if (race) {
-            race.alreadyvoted = false;
-            };
-        }).always(function () {
+            // if (race) {
+            // race.alreadyvoted = false;
+            // this.race.alreadyvoted = false;
+            // };
+        }).always(() => {
             callback.bind(this)(response, race);
         });
 };
@@ -499,7 +515,11 @@ eLect.prototype.onVoteButtonClicked = function(event) {
         user_id: this.userID,
     };
     var postURL = "/api/votes"
-    this.postVote(voteData, postURL);
+    if (this.race.alreadyvoted == true) {
+        var getVoteURL = "/api/candidates/" + candidateID + "/votes/user/" + this.userID;
+    } else {
+        this.postVote(voteData, postURL);
+    };
 };
 
 eLect.prototype.returnData = function(data) {
@@ -601,6 +621,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
         this.responses[i].category = category;
         this.responses[i].index = i;
 
+
         if (this.currentViewCategory == "race") {
             this.viewItem = this.election;
             var voteURL = '/api/races/'+this.responses[i].id + '/votes/user/' + this.userID;
@@ -637,6 +658,7 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
 
     this.candidateSelect = $(".candidate-select");
     console.log("this.candidateSelect", this.candidateSelect);
+
     // Goes last, to ensure all clickable things are made clicky
     this.clickActionBehavior();
 };
@@ -694,7 +716,7 @@ eLect.prototype.postVote = function(voteData, postURL) {
     console.log("voteData", voteData);
     var data = voteData;
     var ajax = $.ajax(postURL, {
-        type: 'POST',
+        type: "POST",
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         data: JSON.stringify(data),
@@ -726,10 +748,25 @@ eLect.prototype.updateViewItems = function() {
 
 eLect.prototype.modifyViewItem = function(response, race) {
     var viewResponses = $(".response-item");
+    var formCandidateValue = $(".form-response-value");
+    var responseItem = viewResponses[response.index];
+    $(formCandidateValue).attr("value", 0);
     if (race && race.alreadyvoted==true) {
+        this.race.alreadyvoted = true;
+        console.log("mod this.race", this.race);
         $(viewResponses).animate({backgroundColor: "#cc7066"});
+        $(viewResponses).attr("already-voted", "true");
+        var responseFormItem = formCandidateValue[response.index];
+        var dataID = $(responseItem).attr("data-id");
+        var getVoteURL = "/api/candidates/" + dataID + "/votes/user/" + this.userID;
+        $.getJSON(getVoteURL).done((data) => {
+            console.log("cand voted mod GET vote data", data);
+            $(responseFormItem).attr("value", data["value"]);
+        }).fail(this.onFail.bind(this, "GET VOTE failed...")
+        );
     } else if (response.alreadyvoted == true) {
-        $(viewResponses[response.index]).animate({backgroundColor: "#cc7066"});
+        $(viewResponses).attr("alread-voted", "true");
+        $(responseItem).animate({backgroundColor: "#cc7066"});
     };
 };
 
