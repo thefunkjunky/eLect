@@ -10,8 +10,9 @@ var eLect = function() {
     this.election = null;
     this.race = null;
     this.candidate = null;
-    this.currentViewCategory = "election";
+    this.currentViewCategory = "home";
     this.listURL = "/api/elections";
+    this.parentItem = null;
     this.viewItem = {title: "Welcome to eLect!",
                     description_short: "Online elections platform.",
                     category: "",
@@ -33,6 +34,10 @@ var eLect = function() {
     this.viewActionsSource = $("#action-buttons-template").html();
     this.viewActionsTemplate = Handlebars.compile(this.viewActionsSource);
 
+    this.formResponseList = $(".form-response-list");
+
+    this.formResponseListCheckbox = $(".item-form-select");
+
     this.responseList = $("#response-list");
     this.responseListSource = $("#response-list-template").html();
     this.responseListTemplate = Handlebars.compile(this.responseListSource);
@@ -48,6 +53,8 @@ var eLect = function() {
     this.fullDescrModalTemplate = Handlebars.compile(this.fullDescrModalSource);
     this.addItemModalSource = $("#add-item-template").html();
     this.addItemModalTemplate = Handlebars.compile(this.addItemModalSource);
+    this.deleteItemModalSource = $("#delete-modal-template").html();
+    this.deleteItemModalTemplate = Handlebars.compile(this.deleteItemModalSource);
 
 
 
@@ -64,7 +71,6 @@ var eLect = function() {
     this.renderViewActions();
     this.renderBottomActions();
 
-    
     this.clickActionBehavior();
 };
 
@@ -91,7 +97,12 @@ eLect.prototype.clickActionBehavior = function() {
     this.navItem.click(this.onNavItemClicked.bind(this));
 
     this.addItem = $("#action-add");
-    this.addItem.click(this.onAddItemClicked.bind(this));
+    this.addItem.click(this.onAddItemClicked.bind(this, "POST"));
+    this.editItem = $("#item-edit");
+    this.editItem.click(this.onAddItemClicked.bind(this, "PUT"));
+
+    this.deleteItems = $("#button-delete");
+    this.deleteItems.click(this.onDeleteItemsClicked.bind(this));
 
     if (this.candidateSelect.length > 0) {
         this.candidateSelect.click(this.onCandidateSelected.bind(this));
@@ -104,6 +115,15 @@ eLect.prototype.clickActionBehavior = function() {
     // $("#responses").on("click", ".item-title",
     //     this.onItemClicked.bind(this));
 
+    // Should be the last function to run after page has loaded and jquery objects assigned
+    this.finalRenderCleanup();
+
+};
+
+eLect.prototype.finalRenderCleanup = function() {
+    if (this.currentViewCategory == "home") {
+        this.deleteItems.hide();
+    }
 };
 
 eLect.prototype.updateNavBar = function() {
@@ -174,6 +194,8 @@ eLect.prototype.renderBottomActions = function() {
     var bottomActions = $(this.bottomActionsTemplate(context));
     this.bottomActions.replaceWith(bottomActions);
     this.bottomActions = bottomActions;
+
+    
 };
 
 eLect.prototype.onElectionsButtonClicked = function(event) {
@@ -230,14 +252,35 @@ eLect.prototype.onRenderCenterModal = function() {
 
 }
 
-eLect.prototype.onAddItemClicked = function(event) {
+eLect.prototype.onAddItemClicked = function(event, method) {
     var item = $(event.target);
-    var category = item.attr("category");
+    var category = this.currentViewCategory;
+    var itemID = item.attr("data-id");
     var categoryCapitalized = this.capitalize(category);
-    var title = "Add " + categoryCapitalized;
+    if (method=="POST") {
+        var action = "Add ";
+        var titleValue = "Title";
+        var shortValue = "Short Description";
+        var longValue = "Long Description";
+    } else if (method=="PUT") {
+        var action = "Edit ";
+        this.parentItem = this.viewItem;
+        var getURL = "/api/" + category + "s" + "/" + itemID;
+        $.getJSON(getURL).done(data => {
+            this.viewItem = data;
+        }).fail(this.onCenterModalCloseClicked.bind(this));
+        var titleValue = this.viewItem.title;
+        var shortValue = this.viewItem.description_short;
+        var longValue = this.viewItem.description_long;
+    };
+    var title = action + categoryCapitalized;
     var context = {
+        method: method,
         title: title,
         category: category,
+        titleValue: titleValue,
+        shortValue: shortValue,
+        longValue: longValue,
     };
 
     var centerModal = $(this.addItemModalTemplate(context));
@@ -251,18 +294,63 @@ eLect.prototype.onAddItemClicked = function(event) {
 
     this.addItemForm = $("#form-add-item");
 
-
-    this.addItemSubmit = $("#form-submit");
-    this.addItemSubmit.click(this.onAddItemSubmitClicked.bind(this));
+    this.itemSubmit = $("#form-submit");
+    this.itemSubmit.click(this.onItemSubmitClicked.bind(this, method));
 };
 
-eLect.prototype.onAddItemSubmitClicked = function(event) {
+eLect.prototype.onItemSubmitClicked = function(event, method) {
     // var categories = ["election", "race", "candidate"];
     // var nextCatIndex = categories.indexOf(this.category) + 1;
     // var nextCategory = categories[nextCatIndex];
     var postURL = "/api/" + this.currentViewCategory + "s";
+    var putURL = "/api/" + this.currentViewCategory + "s" + "/" + this.viewItem.id;
     // var addItemData = new FormData(this.addItemForm[0]);
-    this.postObject(postURL);
+    if (method=="POST") {
+        this.postObject(postURL);
+    } else if (method=="PUT") {
+        this.postObject(putURL);
+    };
+};
+
+eLect.prototype.onDeleteItemsClicked = function(event) {
+    console.log("delete button clicked");
+    var context = {
+        title: "Delete item(s)",
+        description: "Are you sure you want to delete selected items(s) ?",
+    }
+    var centerModal = $(this.deleteItemModalTemplate(context));
+    this.centerModal.replaceWith(centerModal);
+    this.centerModal = centerModal;
+
+    this.centerModal.css("display", "block");
+
+    this.responsesForm = $("#form-response-list");
+    this.responsesChecked = $(".item-form-select:checked");
+
+    console.log("this.responsesChecked", this.responsesChecked);
+
+    this.itemDeleteSubmit = $("#form-submit");
+    this.itemDeleteSubmit.click(this.onItemDeleteSubmitClicked.bind(this));
+
+    this.centerModalClose = $(".modal-close");
+    this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+};
+
+eLect.prototype.onItemDeleteSubmitClicked = function(event) {
+    $.when(
+        $.each(this.responsesChecked, (key, value) => {
+            var itemID = $(value).attr("data-id");
+            var deleteURL = "/api/" + this.currentViewCategory + "s";
+            var data = {
+                id: parseInt(itemID),
+            };
+            $.ajax(deleteURL, {
+            type: 'DELETE',
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            data: JSON.stringify(data),
+            }).fail(this.onFail.bind(this, "DELETE failed..."));
+        })).then(this.onPostObjectDone.bind(this));
 };
 
 eLect.prototype.onCenterModalCloseClicked = function(event) {
@@ -552,6 +640,21 @@ eLect.prototype.postObject = function(postURL) {
     ajax.fail(this.onFail.bind(this, "POST failed...")); 
 };
 
+eLect.prototype.putObject = function(putURL) {
+    var data = this.convertFormToJSON("#form-add-item");
+    console.log("put data", data);
+    var ajax = $.ajax(putURL, {
+        type: 'PUT',
+        // cache: false,
+        contentType: "application/json; charset=utf-8",
+        // processData: false,
+        dataType: 'json',
+        data: JSON.stringify(data),
+    });
+    ajax.done(this.onPostObjectDone.bind(this));
+    ajax.fail(this.onFail.bind(this, "PUT failed..."));
+}
+
 eLect.prototype.postVote = function(voteData, postURL) {
     console.log("voteData", voteData);
     var data = voteData;
@@ -600,6 +703,7 @@ eLect.prototype.onFail = function(what, event) {
     console.error(what, "failed: ", event.statusText);
 };
 
+// Init page w/ eLect class
 $(document).ready(function() {
     window.app = new eLect();
 });

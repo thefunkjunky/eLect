@@ -214,7 +214,7 @@ user_DELETE_schema = {
     "required": []
 }
 
-election_DELETE_schema = {
+DELETE_schema = {
     "type": "object",
     "properties": {
         "id": {"type": "number"}
@@ -222,29 +222,6 @@ election_DELETE_schema = {
     "required": ["id"]
 }
 
-race_DELETE_schema = {
-    "type": "object",
-    "properties": {
-        "id": {"type": "number"},
-    },
-    "required": ["id"]
-}
-
-candidate_DELETE_schema = {
-    "type": "object",
-    "properties": {
-        "id": {"type": "number"},
-    },
-    "required": ["id"]
-}
-
-vote_DELETE_schema = {
-    "type": "object",
-    "properties": {
-        "id": {"type": "number"}
-    },
-    "required": ["id"]
-}
 
 
 # ## Init election types 
@@ -1011,7 +988,7 @@ def election_delete():
 
     # Validate submitted header data, as json, against schema
     try:
-        validate(data, election_DELETE_schema)
+        validate(data, DELETE_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -1038,7 +1015,7 @@ def race_delete():
 
     # Validate submitted header data, as json, against schema
     try:
-        validate(data, race_DELETE_schema)
+        validate(data, DELETE_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
@@ -1068,18 +1045,19 @@ def candidate_delete():
 
     # Validate submitted header data, as json, against schema
     try:
-        validate(data, candidate_DELETE_schema)
+        validate(data, DELETE_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
 
-    check_candidate_id(data["id"])
+    check_cand_id(data["id"])
 
     # Deletes candidate object with id=data["id"]
     candidate = session.query(models.Candidate).get(data["id"])
     # Obtains parent race_id and creates JSON header data for subsequent redirect
     race = session.query(models.Race).get(candidate.race_id)
-    race_data = json.dump({"id": candidate.race_id})
+    race_id = race.id
+    elect_id = race.election_id
     # Deletes candidate and commits
     # session.delete(candidate)
     ### NOTE: deleteing from race.candidates collection to trigger
@@ -1089,7 +1067,7 @@ def candidate_delete():
 
     message = "Deleted candidate id #{}".format(data["id"])
     data = json.dumps({"message": message})
-    headers = {"Location": url_for("race_get", data=race_data)}
+    headers = {"Location": url_for("race_get", race_id=race_id, elect_id=elect_id)}
 
     return Response(data, 200, headers=headers, mimetype="application/json")
 
@@ -1102,7 +1080,7 @@ def vote_delete():
 
     # Validate submitted header data, as json, against schema
     try:
-        validate(data, vote_DELETE_schema)
+        validate(data, DELETE_schema)
     except ValidationError as error:
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")

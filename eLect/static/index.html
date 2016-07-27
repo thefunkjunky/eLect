@@ -93,8 +93,10 @@
 
     <script id="response-list-template" type="text/x-handlebars-template">
         <ul class="view-responses">
+            <form action="#" id="form-response-list">
             {{#each responses}}
             <li class="response-item" data-id="{{ id }}" index={{index}}>
+                <input type="checkbox" class="item-form-select" category="{{ category }}" data-id="{{ id }}" />
                 <img id="avatar-small" src="{{icon_small_location}}" />
                 <div class="item-text">
                     <a href="#" class="item-title" data-id="{{ id }}" category="{{ category }}">{{title}}</a>
@@ -114,12 +116,15 @@
                 </div>
             </li>
            {{/each}}
+        </form>
         </ul>
     </script>
     
     <!-- Bottom action buttons template -->
     <script id="bottom-actions-template" type="text/x-handlebars-template">
         <span class="action-buttons bottom-buttons">
+                <li><a href="#" class="button bottom-button" id="button-delete">Delete</a></li>
+                <li class="spacer"></li>
                 {{#if_equal category "candidate"}}
                 <li><a href="#" class="button bottom-button" id="button-vote">Vote</a></li>
                 {{/if_equal}}
@@ -157,7 +162,7 @@
                     <h1 class="modal-title">{{title}}</h1>
                 </div>
                 <div class="modal-body">
-                    <form action="#" method="POST" id="form-add-item">
+                    <form action="#" method="{{method}}" id="form-add-item">
                     <span class="form-tables">
                     <table class="form-table">
                         <tr>
@@ -169,7 +174,7 @@
                                     </li>
                                     <li>
                                         <p>Short Description: </p>
-                                        <textarea name="description_short" value="{{ shortValue }}"cols="40" rows="3" maxlength="1000"></textarea>
+                                        <textarea name="description_short" value="{{ shortValue }}" cols="40" rows="3" maxlength="1000"></textarea>
                                     </li>
                                     {{#if_equal category "election"}}
                                     <li>
@@ -218,6 +223,25 @@
                 <div class="modal-footer">
                     <a href="#" class="modal-actions" id="form-submit">{{title}}</a>
                     <a href="#" class="modal-actions modal-close" >Close</a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Delete item modal confirmation -->
+    <script id="delete-modal-template" type="text/x-handlebars-template">
+        <div class="center-modal" id="delete-confirm-modal">
+            <div class="center-modal-content">
+                <div class="modal-header">
+                    <a href="#" class="modal-actions modal-close" id="modal-x-close">x</a>
+                    <h1 class="modal-title">{{title}}</h1>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-full-descr">{{description}}</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="modal-actions" id="form-submit">{{title}}</a>
+                    <a href="#" class="modal-actions modal-close" >Cancel</a>
                 </div>
             </div>
         </div>

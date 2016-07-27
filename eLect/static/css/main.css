@@ -55,6 +55,10 @@ ul {
     list-style: none;
 }
 
+.spacer {
+    flex-grow: 1;
+}
+
 .title-bar {
     /*display: flex;*/
     /*flex-wrap: wrap;*/
@@ -245,6 +249,7 @@ a.nav-item {
     /*width: 90%;*/
     min-width: 70%;
     /*align-content: center;*/
+
     /*justify-content: center;*/
     /*align-items: center;*/
     /*align-self: center;*/
@@ -263,7 +268,13 @@ a.nav-item {
     /*margin: 10px;*/
     /*max-width: 800px;*/
     /*align-items: flex-end;*/
+    align-items: center;
     min-width: 50%;
+}
+
+.item-form-select {
+    /*flex: 1 0 auto;*/
+    align-self: center;
 }
 
 .response-item-unselected {
@@ -325,6 +336,13 @@ a.item-title {
     margin: 5px;
     /*align-self: right;*/
 }
+
+.button-delete {
+    /*display: inline;*/
+    /*float: left;*/
+    /*flex-grow: 1;*/
+}
+
 
 a.bottom-button {
     /*align-self: flex-end;*/
