@@ -1029,14 +1029,14 @@ def race_delete():
     # Deletes race object with id=data["id"]
     race = session.query(models.Race).get(data["id"])
     # Obtains parent election_id and creates JSON header data for subsequent redirect
-    election_data = json.dump({"id": race.election_id})
+    election_data = json.dumps({"id": race.election_id})
     # Deletes race and commits
     session.delete(race)
     session.commit()
 
     message = "Deleted race id #{}".format(data["id"])
     data = json.dumps({"message": message})
-    headers = {"Location": url_for("election_get", data=election_data)}
+    headers = {"Location": url_for("race_get", race_id=race.id)}
 
     return Response(data, 200, headers=headers, mimetype="application/json")
 

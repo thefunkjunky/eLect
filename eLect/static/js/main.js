@@ -254,6 +254,8 @@ eLect.prototype.onRenderCenterModal = function() {
     this.centerModal.replaceWith(centerModal);
     this.centerModal = centerModal;
 
+    this.viewItem = this.parentObject;
+
     this.centerModal.css("display", "block");
 
     this.centerModalClose = $(".modal-close");
@@ -358,7 +360,9 @@ eLect.prototype.onDeleteItemsClicked = function(event) {
 };
 
 eLect.prototype.onItemDeleteSubmitClicked = function(event) {
+    // $.when() waits for all refererd objects to be returned before executing then()
     $.when(
+        // iterates through all check objects and deletes each one
         $.each(this.responsesChecked, (key, value) => {
             var itemID = $(value).attr("data-id");
             var deleteURL = "/api/" + this.currentViewCategory + "s";
@@ -402,6 +406,7 @@ eLect.prototype.selectView = function (item) {
         var listURL = "/api/races/" + item.attr("data-id") + "/candidates";
         this.getResponseList(category, listURL);
     } else if (category == "candidate") {
+        this.parentObject = this.viewItem;
         var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL, this.onRenderCenterModal);
     };
@@ -420,6 +425,7 @@ eLect.prototype.onNavItemClicked = function(event) {
         var objectURL = "/api/elections/" + item.attr("data-id");
         this.getObject(category, objectURL, this.onRenderCenterModal);
     } else if (category == "race") {
+        this.parentObject = this.viewItem;
         var objectURL = "/api/races/" + item.attr("data-id");
         this.getObject(category, objectURL);
         // Update the category for the list objects
@@ -427,6 +433,7 @@ eLect.prototype.onNavItemClicked = function(event) {
         var listURL = "/api/races/" + item.attr("data-id") + "/candidates";
         this.getObject(category, objectURL, this.onRenderCenterModal);
     } else if (category == "candidate") {
+        this.parentObject = this.viewItem;
         var objectURL = "/api/candidates/" + item.attr("data-id");
         this.getObject(category, objectURL, this.onRenderCenterModal);
     };
@@ -509,38 +516,38 @@ eLect.prototype.getObject = function(category, objectURL, callback) {
     ajax.fail(this.onFail.bind(this, "Getting object information"));
 };
 
-eLect.prototype.getVote = function(response, candID, callback) {
-    var raceID = response.id;
-    callback.bind(this);
-    if (raceID) {
-        var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
-    } else if (candID) {
-        var voteURL = "/api/candidates/" + candID + "/votes/user/" + this.userID;
-    }
-    var ajax = $.ajax(voteURL, {
-        type: 'GET',
-        dataType: 'json',
-    });
-    // ajax.done(this.onGetVoteDone.bind(this, callback));
-    ajax.fail(this.onFail.bind(this, "Getting vote object information"));
+// eLect.prototype.getVote = function(response, candID, callback) {
+//     var raceID = response.id;
+//     callback.bind(this);
+//     if (raceID) {
+//         var voteURL = "/api/races/" + raceID + "/votes/user/" + this.userID;
+//     } else if (candID) {
+//         var voteURL = "/api/candidates/" + candID + "/votes/user/" + this.userID;
+//     }
+//     var ajax = $.ajax(voteURL, {
+//         type: 'GET',
+//         dataType: 'json',
+//     });
+//     // ajax.done(this.onGetVoteDone.bind(this, callback));
+//     ajax.fail(this.onFail.bind(this, "Getting vote object information"));
 
-    // if (ajax.responseJSON) {
-    //     return ajax.responseJSON;
-    // } else {
-    //     return null;
-    // };
-    // console.log("ajax", ajax);
-    // console.log("ajax.responseJSON", ajax.responseJSON);
+//     // if (ajax.responseJSON) {
+//     //     return ajax.responseJSON;
+//     // } else {
+//     //     return null;
+//     // };
+//     // console.log("ajax", ajax);
+//     // console.log("ajax.responseJSON", ajax.responseJSON);
 
-    return ajax.done(function(data, callback){
-        if (data) {
-            console.log("callback, data", callback, data);
-            return [data, callback];
-        } else {
-            return null;
-        }
-    });
-};
+//     return ajax.done(function(data, callback){
+//         if (data) {
+//             console.log("callback, data", callback, data);
+//             return [data, callback];
+//         } else {
+//             return null;
+//         }
+//     });
+// };
 
 eLect.prototype.onGetObjectDone = function(category, callback, data) {
     console.log(category);
@@ -561,6 +568,8 @@ eLect.prototype.onGetObjectDone = function(category, callback, data) {
     if (callback) {
         callback.bind(this)();
     };
+
+    this.viewItem
 };
 
 eLect.prototype.onGetVoteDone = function(callback, data) {
@@ -593,10 +602,12 @@ eLect.prototype.onGetResponsesDone = function(category, data) {
         this.responses[i].index = i;
 
         if (this.currentViewCategory == "race") {
+            this.viewItem = this.election;
             var voteURL = '/api/races/'+this.responses[i].id + '/votes/user/' + this.userID;
             this.alreadyVoted(voteURL, this.responses[i], null, this.modifyViewItem);
             console.log("final this.response", this.responses[i]);
         } else if (this.currentViewCategory == "candidate") {
+            this.viewItem = this.race;
             var voteURL = '/api/candidates/'+this.responses[i].id + '/votes/user/' + this.userID;
             this.alreadyVoted(voteURL, this.responses[i], this.race, this.modifyViewItem);
             console.log("final this.response", this.responses[i]);
