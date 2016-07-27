@@ -98,7 +98,12 @@ eLect.prototype.clickActionBehavior = function() {
 
     this.addItem = $("#action-add");
     this.addItem.click(this.onAddItemClicked.bind(this, "POST"));
-    this.editItem = $("#item-edit");
+
+    this.actionViewElections = $("#action-view-elections");
+    this.actionViewElections.click(this.onElectionsButtonClicked.bind(this));
+
+
+    this.editItem = $(".item-edit");
     this.editItem.click(this.onAddItemClicked.bind(this, "PUT"));
 
     this.deleteItems = $("#button-delete");
@@ -123,6 +128,10 @@ eLect.prototype.clickActionBehavior = function() {
 eLect.prototype.finalRenderCleanup = function() {
     if (this.currentViewCategory == "home") {
         this.deleteItems.hide();
+        this.addItem.hide();
+    } else {
+        this.actionViewElections.hide();
+        this.addItem.show();
     }
 };
 
@@ -252,63 +261,75 @@ eLect.prototype.onRenderCenterModal = function() {
 
 }
 
-eLect.prototype.onAddItemClicked = function(event, method) {
+eLect.prototype.onAddItemClicked = function(method, event) {
     var item = $(event.target);
     var category = this.currentViewCategory;
     var itemID = item.attr("data-id");
     var categoryCapitalized = this.capitalize(category);
+    
     if (method=="POST") {
-        var action = "Add ";
-        var titleValue = "Title";
-        var shortValue = "Short Description";
-        var longValue = "Long Description";
+        var title = "Add " + categoryCapitalized;
+        var context = {
+            title: title,
+            titleValue: "Title",
+            shortValue: "Short Description",
+            longValue: "Long Description",
+        };
+
+        var centerModal = $(this.addItemModalTemplate(context));
+        this.centerModal.replaceWith(centerModal);
+        this.centerModal = centerModal;
+
+        this.centerModal.css("display", "block");
+
+        this.centerModalClose = $(".modal-close");
+        this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+
+        this.addItemForm = $("#form-add-item");
+
+        this.itemSubmit = $("#form-submit");
+        this.itemSubmit.click(this.onItemSubmitClicked.bind(this, method));
+
     } else if (method=="PUT") {
-        var action = "Edit ";
-        this.parentItem = this.viewItem;
         var getURL = "/api/" + category + "s" + "/" + itemID;
         $.getJSON(getURL).done(data => {
-            this.viewItem = data;
+            var title = "Edit " + categoryCapitalized;
+            var context = {
+                title: title,
+                titleValue: data.title,
+                shortValue: data.description_short,
+                longValue: data.description_long,
+            };
+            var centerModal = $(this.addItemModalTemplate(context));
+            this.centerModal.replaceWith(centerModal);
+            this.centerModal = centerModal;
+
+            this.centerModal.css("display", "block");
+
+            this.centerModalClose = $(".modal-close");
+            this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
+
+            this.addItemForm = $("#form-add-item");
+
+            this.itemSubmit = $("#form-submit");
+            console.log("data.id", data.id);
+            this.itemSubmit.click(this.onItemSubmitClicked.bind(this, "PUT", data.id));
+
         }).fail(this.onCenterModalCloseClicked.bind(this));
-        var titleValue = this.viewItem.title;
-        var shortValue = this.viewItem.description_short;
-        var longValue = this.viewItem.description_long;
     };
-    var title = action + categoryCapitalized;
-    var context = {
-        method: method,
-        title: title,
-        category: category,
-        titleValue: titleValue,
-        shortValue: shortValue,
-        longValue: longValue,
-    };
-
-    var centerModal = $(this.addItemModalTemplate(context));
-    this.centerModal.replaceWith(centerModal);
-    this.centerModal = centerModal;
-
-    this.centerModal.css("display", "block");
-
-    this.centerModalClose = $(".modal-close");
-    this.centerModalClose.click(this.onCenterModalCloseClicked.bind(this));
-
-    this.addItemForm = $("#form-add-item");
-
-    this.itemSubmit = $("#form-submit");
-    this.itemSubmit.click(this.onItemSubmitClicked.bind(this, method));
 };
 
-eLect.prototype.onItemSubmitClicked = function(event, method) {
+eLect.prototype.onItemSubmitClicked = function(method, id, event) {
     // var categories = ["election", "race", "candidate"];
     // var nextCatIndex = categories.indexOf(this.category) + 1;
     // var nextCategory = categories[nextCatIndex];
     var postURL = "/api/" + this.currentViewCategory + "s";
-    var putURL = "/api/" + this.currentViewCategory + "s" + "/" + this.viewItem.id;
+    var putURL = postURL;
     // var addItemData = new FormData(this.addItemForm[0]);
     if (method=="POST") {
-        this.postObject(postURL);
+        this.postObject(postURL, "POST");
     } else if (method=="PUT") {
-        this.postObject(putURL);
+        this.postObject(putURL, "PUT", id);
     };
 };
 
@@ -620,16 +641,19 @@ eLect.prototype.convertFormToJSON = function(form) {
     return json;
 };
 
-eLect.prototype.postObject = function(postURL) {
+eLect.prototype.postObject = function(postURL, method, putID) {
     var data = this.convertFormToJSON("#form-add-item");
     if (this.race) {
         data["race_id"] = this.race.id;
     } else if (this.election) {
         data["election_id"] = this.election.id;
+    }; 
+    if (putID) {
+        data["id"] = parseInt(putID);
     };
     console.log("post data", data);
     var ajax = $.ajax(postURL, {
-        type: 'POST',
+        type: method,
         // cache: false,
         contentType: "application/json; charset=utf-8",
         // processData: false,

@@ -834,12 +834,13 @@ def election_put():
     election = session.query(models.Election).get(data["id"])
 
     # Update target election
+    data.pop("id", None)
     for key, value in data.items():
-        election[key] = value
+        setattr(election, key, value)
     session.commit()
 
     data = json.dumps(election.as_dictionary(), default=json_serial)
-    headers = {"Location": url_for("election_get", id=election.id)}
+    headers = {"Location": url_for("election_get", elect_id=election.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
 @app.route("/api/races", methods=["PUT"])
@@ -862,12 +863,13 @@ def race_put():
     race = session.query(models.Race).get(data["id"])
 
     # Update target race
+    data.pop("id", None)
     for key, value in data.items():
-        race[key] = value
+        setattr(race, key, value)
     session.commit()
 
     data = json.dumps(race.as_dictionary(), default=json_serial)
-    headers = {"Location": url_for("race_get", id=race.id)}
+    headers = {"Location": url_for("race_get", race_id=race.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
 
@@ -885,18 +887,19 @@ def candidate_put():
         data = {"message": error.message}
         return Response(json.dumps(data), 422, mimetype="application/json")
 
-    check_candidate_id(data["id"])
+    check_cand_id(data["id"])
 
     # Init Candidate object with id=data["id"]
     candidate = session.query(models.Candidate).get(data["id"])
 
     # Update target candidate
+    data.pop("id", None)
     for key, value in data.items():
-        candidate[key] = value
+        setattr(candidate, key, value)
     session.commit()
 
     data = json.dumps(candidate.as_dictionary(), default=json_serial)
-    headers = {"Location": url_for("candidate_get", id=candidate.id)}
+    headers = {"Location": url_for("candidate_get", cand_id=candidate.id)}
     return Response(data, 200, headers=headers, mimetype="application/json")
 
 @app.route("/api/votes", methods=["PUT"])
@@ -931,6 +934,7 @@ def vote_put():
         return Response(data, 403, mimetype="application/json")
 
     # Update target vote
+    data.pop("id", None)
     for key, value in data.items():
         vote[key] = value
     session.commit()

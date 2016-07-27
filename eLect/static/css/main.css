@@ -203,12 +203,13 @@ a.nav-item {
     margin: 0px;
     /*align-self: left;*/
     list-style: none;
-    justify-content: space-around;
+    justify-content: center;
+    align-items: center;
 }
 
 #action-add {
     /*flex: 1;*/
-    align-self: center;
+    /*align-self: center;*/
 }
 
 .button {

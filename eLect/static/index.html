@@ -87,6 +87,7 @@
         <div id="view-actions">
             <span class="action-buttons">
                 <li ><a href="#" class="button" id="action-add" category="{{category}}" parent-id="{{parentID}}">Add {{category}}</a></li>
+                <li ><a href="#" class="button" id="action-view-elections">View Elections</a></li>
             </span>
         </div>
     </script>
@@ -174,7 +175,7 @@
                                     </li>
                                     <li>
                                         <p>Short Description: </p>
-                                        <textarea name="description_short" value="{{ shortValue }}" cols="40" rows="3" maxlength="1000"></textarea>
+                                        <textarea name="description_short" cols="40" rows="3" maxlength="1000">{{ shortValue }}</textarea>
                                     </li>
                                     {{#if_equal category "election"}}
                                     <li>
@@ -209,7 +210,7 @@
                                 <li>
                                     <p>Long Description: 
                                     </p>
-                                    <textarea name="description_long" value="{{ longValue }}"cols="50" rows="10" maxlength="1000"></textarea>
+                                    <textarea name="description_long" cols="50" rows="10" maxlength="1000">{{ longValue }}</textarea>
                                 </li>
                                 </ul>
                                 
