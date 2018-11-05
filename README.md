@@ -1,7 +1,7 @@
 # eLect
 ## eLect - an online elections platform, with future Blockchain support
 
-(Note: This is a project I started over a year ago to teach myself how to program, 
+(Note: This is a project I started years ago to teach myself how to program, 
 and is currently still a work in progress.)  
 
 One only has to look at some grim statistics to know that the state of democracy is failing on almost every front,
