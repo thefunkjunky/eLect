@@ -1,5 +1,5 @@
 # eLect
-## eLect - an online elections platform, with future Blockchain support
+## eLect - an online elections platform
 
 (Note: This is a project I started years ago to teach myself how to program, 
 and is currently still a work in progress.)  
